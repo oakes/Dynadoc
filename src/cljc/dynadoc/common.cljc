@@ -12,7 +12,7 @@
                       (str sym)]])
          nses))
      (into [:div {:class "vars"}]
-       (mapv (fn [{:keys [sym url meta source]}]
+       (mapv (fn [{:keys [sym url meta source spec]}]
                (let [{:keys [arglists doc]} meta]
                  [:div
                   (into (if var-sym
@@ -23,6 +23,10 @@
                              [:h2 (pr-str (apply list sym arglist))])
                         arglists)
                       [[:h2 (str sym)]]))
+                  (when spec
+                    [:div {:class "paren-soup"}
+                     [:div {:class "content"}
+                      (str spec)]])
                   (when doc
                     [:div {:class "doc"} doc])
                   (when (and var-sym source)

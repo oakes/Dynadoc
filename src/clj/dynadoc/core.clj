@@ -33,7 +33,14 @@
                                   find-var
                                   meta
                                   (select-keys common/meta-keys))
-                        :source (repl/source-fn sym)}))
+                        :source (repl/source-fn sym)
+                        :spec (try
+                                (require 'clojure.spec.alpha)
+                                (let [form (resolve (symbol "clojure.spec.alpha" "form"))]
+                                  (with-out-str
+                                    (clojure.pprint/pprint
+                                      (form sym))))
+                                (catch Exception _))}))
                vars)
         state (atom {:nses nses :ns-sym ns-sym :var-sym var-sym :vars vars})]
     (-> "template.html" io/resource slurp
