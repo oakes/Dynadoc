@@ -1,0 +1,3 @@
+{:require  [nightlight.repl-server paren-soup.core-spec dynadoc.core]
+ :init-fns [cljs.spec.test.alpha/instrument]
+ :compiler-options {}}
