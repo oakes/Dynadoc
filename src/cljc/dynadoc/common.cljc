@@ -2,9 +2,14 @@
   (:require [rum.core :as rum]))
 
 (rum/defc app < rum/reactive [state]
-  (let [{:keys [ns-names]} @state]
-    (into [:div]
-      (mapv (fn [n]
-              [:div (str n)])
-        ns-names))))
+  (let [{:keys [nses vars]} @state]
+    [:div
+     (into [:div {:class "nses"}]
+       (mapv (fn [sym]
+               [:div [:a {:href (str sym)} (str sym)]])
+         nses))
+     (into [:div {:class "vars"}]
+       (mapv (fn [sym]
+               [:div (str sym)])
+         vars))]))
 

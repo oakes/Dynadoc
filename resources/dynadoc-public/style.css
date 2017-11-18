@@ -11,3 +11,21 @@ html, body, .paren-soup, .CodeMirror {
     height: 100%;
     margin: 0;
 }
+.nses {
+    position: fixed;
+    width: 300px;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    padding: 5px;
+    overflow: auto;
+}
+.vars {
+    position: fixed;
+    top: 0px;
+    left: 300px;
+    right: 0px;
+    bottom: 0px;
+    padding: 5px;
+    overflow: auto;
+}
