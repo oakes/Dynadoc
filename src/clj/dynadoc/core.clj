@@ -9,7 +9,8 @@
             [ring.util.request :refer [body-string]]
             [org.httpkit.server :refer [run-server]]
             [rum.core :as rum]
-            [dynadoc.common :as common]))
+            [dynadoc.common :as common]
+            [dynadoc.example :as ex]))
 
 (defonce web-server (atom nil))
 (defonce options (atom nil))
@@ -40,7 +41,14 @@
                                   (with-out-str
                                     (clojure.pprint/pprint
                                       (form sym))))
-                                (catch Exception _))}))
+                                (catch Exception _))
+                        :examples (mapv (fn [example]
+                                          (update example :def
+                                            (fn [def]
+                                              (with-out-str
+                                                (clojure.pprint/pprint
+                                                  def)))))
+                                    (get-in @ex/examples [ns-sym var-sym]))}))
                vars)
         state (atom {:nses nses :ns-sym ns-sym :var-sym var-sym :vars vars})]
     (-> "template.html" io/resource slurp
