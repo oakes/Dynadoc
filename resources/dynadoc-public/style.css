@@ -19,6 +19,7 @@ html, body, .paren-soup, .CodeMirror {
     bottom: 0px;
     padding: 5px;
     overflow: auto;
+    white-space: nowrap;
 }
 .vars {
     position: fixed;
@@ -28,4 +29,7 @@ html, body, .paren-soup, .CodeMirror {
     bottom: 0px;
     padding: 5px;
     overflow: auto;
+}
+.doc {
+    white-space: pre;
 }

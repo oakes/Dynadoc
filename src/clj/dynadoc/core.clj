@@ -1,6 +1,7 @@
 (ns dynadoc.core
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.repl :as repl]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.file :refer [wrap-file]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -19,11 +20,20 @@
 (defn get-vars [ns]
   (->> (ns-publics ns) keys vec))
 
-(defn page [nses ns var]
+(defn page [nses ns-sym var-sym]
   (let [vars (cond
-               var [var]
-               ns (get-vars ns))
-        state (atom {:nses nses :ns ns :vars vars})]
+               var-sym [var-sym]
+               ns-sym (get-vars ns-sym))
+        vars (mapv (fn [var-sym]
+                     (let [sym (symbol (str ns-sym) (str var-sym))]
+                       {:sym var-sym
+                        :meta (-> sym
+                                  find-var
+                                  meta
+                                  (select-keys common/meta-keys))
+                        :source (repl/source-fn sym)}))
+               vars)
+        state (atom {:nses nses :ns-sym ns-sym :var-sym var-sym :vars vars})]
     (-> "template.html" io/resource slurp
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
