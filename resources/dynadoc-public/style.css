@@ -11,6 +11,3 @@ html, body, .paren-soup, .CodeMirror {
     height: 100%;
     margin: 0;
 }
-html, body {
-    overflow: hidden;
-}

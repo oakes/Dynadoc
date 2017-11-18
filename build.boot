@@ -1,5 +1,5 @@
 (set-env!
-  :source-paths #{"src/clj" "src/cljs"}
+  :source-paths #{"src/clj" "src/cljc" "src/cljs"}
   :dependencies '[[adzerk/boot-cljs "2.1.4" :scope "test"]
                   [adzerk/boot-reload "0.5.2" :scope "test"]
                   [org.clojure/test.check "0.9.0" :scope "test"]
@@ -38,15 +38,15 @@
         :invert true})
 
 (deftask local []
-  (set-env! :resource-paths #{"src/clj" "src/cljs" "resources" "prod-resources"})
+  (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "prod-resources"})
   (comp (cljs :optimizations :advanced) (sift) (pom) (jar) (install)))
 
 (deftask deploy []
-  (set-env! :resource-paths #{"src/clj" "src/cljs" "resources" "prod-resources"})
+  (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "prod-resources"})
   (comp (cljs :optimizations :advanced) (sift) (pom) (jar) (push)))
 
 (deftask run []
-  (set-env! :resource-paths #{"src/clj" "src/cljs" "resources" "dev-resources"})
+  (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "dev-resources"})
   (comp
     (watch)
     (nightlight :port 4000 :url "http://localhost:5000")
