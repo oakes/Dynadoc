@@ -18,7 +18,7 @@
   (->> (all-ns) (map ns-name) sort vec))
 
 (defn get-vars [ns]
-  (->> (ns-publics ns) keys vec))
+  (->> (ns-publics ns) keys sort vec))
 
 (defn page [nses ns-sym var-sym]
   (let [vars (cond
@@ -27,6 +27,7 @@
         vars (mapv (fn [var-sym]
                      (let [sym (symbol (str ns-sym) (str var-sym))]
                        {:sym var-sym
+                        :url (java.net.URLEncoder/encode (str var-sym) "UTF-8")
                         :meta (-> sym
                                   find-var
                                   meta

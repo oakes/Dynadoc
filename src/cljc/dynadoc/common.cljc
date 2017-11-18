@@ -1,6 +1,5 @@
 (ns dynadoc.common
-  (:require [rum.core :as rum]
-            [clojure.string :as str]))
+  (:require [rum.core :as rum]))
 
 (def meta-keys [:added :file :arglists :doc])
 
@@ -13,19 +12,18 @@
                       (str sym)]])
          nses))
      (into [:div {:class "vars"}]
-       (mapv (fn [{:keys [sym meta source]}]
+       (mapv (fn [{:keys [sym url meta source]}]
                (let [{:keys [arglists doc]} meta]
                  [:div
                   (into (if var-sym
                           [:div]
-                          [:a {:href (str "/" ns-sym "/" sym)}])
+                          [:a {:href (str "/" ns-sym "/" url)}])
                     (if arglists
                       (map (fn [arglist]
                              [:h2 (pr-str (apply list sym arglist))])
                         arglists)
                       [[:h2 (str sym)]]))
-                  (if doc
-                    [:div {:class "doc"} doc]
-                    [:i "No docstring"])]))
+                  (when doc
+                    [:div {:class "doc"} doc])]))
          vars))]))
 
