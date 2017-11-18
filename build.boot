@@ -51,7 +51,7 @@
     (watch)
     (nightlight :port 4000 :url "http://localhost:5000")
     (reload :asset-path "dynadoc-public")
-    (cljs :source-map true :optimizations :none :compiler-options {:asset-path "main.out"})
+    (cljs :source-map true :optimizations :none :compiler-options {:asset-path "/main.out"})
     (with-pass-thru _
       (instrument)
       (dev-start {:port 5000 :url "http://localhost:5000"}))

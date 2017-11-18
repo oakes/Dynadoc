@@ -36,7 +36,7 @@
       (let [nses (get-nses)
             [ns var] (->> (str/split (:uri request) #"/")
                           (remove empty?)
-                          (mapv symbol))]
+                          (mapv #(-> % (java.net.URLDecoder/decode "UTF-8") symbol)))]
         (when (contains? (set nses) ns)
           {:status 200
            :headers {"Content-Type" "text/html"}
