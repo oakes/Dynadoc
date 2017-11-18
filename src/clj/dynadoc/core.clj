@@ -13,9 +13,17 @@
 (defonce web-server (atom nil))
 (defonce options (atom nil))
 
-(defn page [ns]
-  (let [state (atom {:nses (->> (all-ns) (mapv ns-name) sort)
-                     :vars (when ns (keys (ns-publics ns)))})]
+(defn get-nses []
+  (->> (all-ns) (map ns-name) sort vec))
+
+(defn get-vars [ns]
+  (->> (ns-publics ns) keys vec))
+
+(defn page [nses ns var]
+  (let [vars (cond
+               var [var]
+               ns (get-vars ns))
+        state (atom {:nses nses :ns ns :vars vars})]
     (-> "template.html" io/resource slurp
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
@@ -24,12 +32,15 @@
   (or (when (= (:uri request) "/")
         {:status 200
          :headers {"Content-Type" "text/html"}
-         :body (page nil)})
-      (let [ns (symbol (subs (:uri request) 1))]
-        (when (contains? (->> (all-ns) (mapv ns-name) set) ns)
+         :body (page (get-nses) nil nil)})
+      (let [nses (get-nses)
+            [ns var] (->> (str/split (:uri request) #"/")
+                          (remove empty?)
+                          (mapv symbol))]
+        (when (contains? (set nses) ns)
           {:status 200
            :headers {"Content-Type" "text/html"}
-           :body (page ns)}))
+           :body (page nses ns var)}))
       (not-found "Page not found")))
 
 (defn print-server [server]
