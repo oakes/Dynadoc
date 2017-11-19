@@ -7,14 +7,15 @@
                   [org.clojure/clojurescript "1.9.946" :scope "test"]
                   [paren-soup "2.9.1" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
-                  [rum "0.10.8"]
                   ; clj deps
                   [org.clojure/clojure "1.8.0" :scope "provided"]
                   [nightlight "1.9.3" :scope "test"]
                   [ring "1.6.1"]
                   [http-kit "2.2.0"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
-                  [eval-soup "1.2.2"]]
+                  [eval-soup "1.2.2"]
+                  [rum "0.10.8"]
+                  [html-soup "1.5.0"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")
