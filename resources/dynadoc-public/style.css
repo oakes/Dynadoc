@@ -27,9 +27,12 @@ html, body, .paren-soup, .CodeMirror {
     left: 300px;
     right: 0px;
     bottom: 0px;
-    padding: 5px;
+    margin: 5px;
     overflow: auto;
 }
 .doc {
     white-space: pre;
+}
+.section {
+	margin: 10px;
 }

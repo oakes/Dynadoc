@@ -24,26 +24,26 @@
                         arglists)
                       [[:h2 (str sym)]]))
                   (when spec
-                    [:div
+                    [:div {:class "section"}
                      [:h2 "Spec"]
                      [:div {:class "paren-soup"}
                       [:div {:class "content"}
                        (str spec)]]])
                   (when doc
-                    [:div {:class "doc"} doc])
+                    [:div {:class "section doc"} doc])
                   (when (and var-sym (seq examples))
                     (into [:div [:h2 (if (= (count examples) 1)
                                        "Example"
                                        "Examples")]]
                       (mapv (fn [{:keys [doc def]}]
-                              [:div
-                               [:div doc]
+                              [:div {:class "section"}
+                               [:div {:class "section doc"} doc]
                                [:div {:class "paren-soup"}
                                 [:div {:class "content"}
                                  def]]])
                         examples)))
                   (when (and var-sym source)
-                    [:div
+                    [:div {:class "section"}
                      [:h2 "Source"]
                      [:div {:class "paren-soup"}
                       [:div {:class "content"}
