@@ -4,7 +4,7 @@
 
 (def meta-keys [:file :arglists :doc])
 
-(defn var->html [{:keys [var-sym tests? instarepl? toggle-tests toggle-instarepl]}
+(defn var->html [{:keys [var-sym eval? toggle-eval]}
                  {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
@@ -24,22 +24,17 @@
           (str spec)]]])
      (when doc
        [:div {:class "section doc"} doc])
-     (when (and var-sym (seq examples))
+     (when (seq examples)
        (into [:div
               [:h2
                (if (= (count examples) 1)
                  "Example"
                  "Examples")
-               [:div {:class "button"
-                      :on-click toggle-tests}
-                (if tests?
-                  "Hide Tests"
-                  "Show Tests")]
-               [:div {:class "button"
-                      :on-click toggle-instarepl}
-                (if instarepl?
-                  "Hide InstaREPL"
-                  "Show InstaREPL")]]]
+               [:div {:class "button var-button"
+                      :on-click toggle-eval}
+                (if eval?
+                  "Stop"
+                  "Start")]]]
          (mapv (fn [{:keys [doc def]}]
                  [:div {:class "section"}
                   [:div {:class "section doc"} doc]
