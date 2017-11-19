@@ -19,6 +19,19 @@
 (defonce web-server (atom nil))
 (defonce options (atom nil))
 
+(defn get-cljs-arglists [args]
+  (loop [args args
+         arglists []]
+    (if-let [arg (first args)]
+      (cond
+        (vector? arg)
+        (list arg)
+        (and (list? arg) (vector? (first arg)))
+        (recur (rest args) (conj arglists (first arg)))
+        :else
+        (recur (rest args) arglists))
+      arglists)))
+
 (defn read-cljs-file [ns->vars f]
   (let [reader (indexing-push-back-reader (slurp f))]
     (loop [current-ns nil
@@ -34,12 +47,14 @@
             (and current-ns
                  (list? form)
                  (contains? #{'def 'defn} (first form)))
-            (let [[_ sym doc] form]
+            (let [[_ sym & args] form]
               (update-in ns->vars [current-ns sym] merge
                 {:type :cljs
                  :sym sym
-                 :meta {:doc (when (string? doc)
-                               doc)}
+                 :meta {:doc (when (string? (first args))
+                               (first args))
+                        :arglists (when (= 'defn (first form))
+                                    (get-cljs-arglists args))}
                  :source (with-out-str
                            (clojure.pprint/pprint
                              form))
