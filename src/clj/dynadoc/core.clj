@@ -1,5 +1,6 @@
 (ns dynadoc.core
-  (:require [clojure.java.io :as io]
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.repl :as repl]
             [ring.middleware.resource :refer [wrap-resource]]
@@ -10,7 +11,8 @@
             [org.httpkit.server :refer [run-server]]
             [rum.core :as rum]
             [dynadoc.common :as common]
-            [dynadoc.example :as ex]))
+            [dynadoc.example :as ex]
+            [eval-soup.core :as es]))
 
 (defonce web-server (atom nil))
 (defonce options (atom nil))
@@ -59,6 +61,11 @@
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
 
+(defn form->serializable [form]
+  (if (instance? Exception form)
+    [(.getMessage form)]
+    (pr-str form)))
+
 (defn handler [{:keys [uri] :as request}]
   (or (when (= uri "/")
         {:status 200
@@ -72,6 +79,15 @@
           {:status 200
            :headers {"Content-Type" "text/html"}
            :body (page nses ns var)}))
+      (when (= uri "/eval")
+        {:status 200
+         :headers {"Content-Type" "text/plain"}
+         :body (->> request
+                    body-string
+                    edn/read-string
+                    es/code->results
+                    (mapv form->serializable)
+                    pr-str)})
       (not-found "Page not found")))
 
 (defn print-server [server]

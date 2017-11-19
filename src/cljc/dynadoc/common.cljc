@@ -9,9 +9,9 @@
   (let [expanded? (::expanded? state)]
     [:div {:class "section"}
      [:a {:href url
-          :on-click (fn [e]
-                      (.preventDefault e)
-                      (swap! expanded? not))}
+          #?@(:cljs [:on-click (fn [e]
+                                 (.preventDefault e)
+                                 (swap! expanded? not))])}
       [:h3 (str (if @expanded? "- " "+ ") label)]]
      (when @expanded?
        @content)]))
@@ -21,7 +21,8 @@
           [:div {:class "section"}
            [:div {:class "section doc"} doc]
            [:div {:class "paren-soup"}
-            [:div {:class "content"
+            [:div {:class "instarepl" :style {:display "none"}}]
+            [:div {:class "content edit"
                    :dangerouslySetInnerHTML {:__html (hs/code->html def)}}]]])
     examples))
 
@@ -30,7 +31,16 @@
    [:div {:class "content"
           :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
 
-(defn var->html [{:keys [var-sym eval? toggle-eval]}
+(rum/defcs toggle-instarepl-button < (rum/local false ::on?)
+  [state on-click]
+  (let [on? (::on? state)]
+    [:div {:class "button var-button"
+           #?@(:cljs [:on-click (fn [e]
+                                  (.preventDefault e)
+                                  (on-click (swap! on? not)))])}
+     (if @on? "Hide InstaREPL" "Show InstaREPL")]))
+
+(defn var->html [{:keys [var-sym toggle-instarepl]}
                  {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
@@ -54,11 +64,7 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Examples"
-                 [:div {:class "button var-button"
-                        :on-click toggle-eval}
-                  (if eval?
-                    "Stop"
-                    "Start")]]]
+                 (toggle-instarepl-button toggle-instarepl)]]
            (examples->html examples))
          (expandable-section "Examples" url
            (delay (into [:div] (examples->html examples))))))
