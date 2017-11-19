@@ -50,13 +50,21 @@
                 :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]]])]))
 
 (rum/defc app < rum/reactive [state]
-  (let [{:keys [nses vars] :as state} (rum/react state)]    
+  (let [{:keys [nses ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
     [:div
      (into [:div {:class "nses"}]
        (mapv (fn [sym]
                [:div [:a {:href (str "/" sym)}
                       (str sym)]])
          nses))
-     (into [:div {:class "vars"}]
-       (mapv (partial var->html state) vars))]))
+     (if ns-sym
+       (into [:div {:class "vars"}
+              (when-not var-sym
+                [:div
+                 [:center [:h1 (str ns-sym)]]
+                 (when-let [doc (:doc ns-meta)]
+                   [:div {:class "section doc"} doc])])]
+         (mapv (partial var->html state) vars))
+       [:div {:class "vars"}
+        [:center [:h1 "Welcome to Dynadoc"]]])]))
 

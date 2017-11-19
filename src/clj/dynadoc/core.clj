@@ -50,18 +50,22 @@
                                                   def)))))
                                     (get-in @ex/examples [ns-sym var-sym]))}))
                vars)
-        state (atom {:nses nses :ns-sym ns-sym :var-sym var-sym :vars vars})]
+        state (atom {:nses nses
+                     :ns-sym ns-sym
+                     :ns-meta (some-> ns-sym the-ns meta)
+                     :var-sym var-sym
+                     :vars vars})]
     (-> "template.html" io/resource slurp
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
 
-(defn handler [request]
-  (or (when (= (:uri request) "/")
+(defn handler [{:keys [uri] :as request}]
+  (or (when (= uri "/")
         {:status 200
          :headers {"Content-Type" "text/html"}
          :body (page (get-nses) nil nil)})
       (let [nses (get-nses)
-            [ns var] (->> (str/split (:uri request) #"/")
+            [ns var] (->> (str/split uri #"/")
                           (remove empty?)
                           (mapv #(-> % (java.net.URLDecoder/decode "UTF-8") symbol)))]
         (when (contains? (set nses) ns)
