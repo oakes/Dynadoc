@@ -41,7 +41,7 @@
      (if @on? "Hide InstaREPL" "Show InstaREPL")]))
 
 (defn var->html [{:keys [var-sym toggle-instarepl]}
-                 {:keys [sym url meta source spec examples]}]
+                 {:keys [sym url meta source spec examples type]}]
   (let [{:keys [arglists doc]} meta]
     [:div
      (into (if var-sym
@@ -64,7 +64,8 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Examples"
-                 (toggle-instarepl-button toggle-instarepl)]]
+                 (when (= type :clj)
+                   (toggle-instarepl-button toggle-instarepl))]]
            (examples->html examples))
          (expandable-section "Examples" url
            (delay (into [:div] (examples->html examples))))))

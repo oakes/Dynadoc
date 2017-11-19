@@ -30,20 +30,36 @@
                    (= (first form) 'ns))
             (second form)
             current-ns)
-          (if (and current-ns
-                   (list? form)
-                   (contains? #{'def 'defn} (first form)))
+          (cond
+            (and current-ns
+                 (list? form)
+                 (contains? #{'def 'defn} (first form)))
             (let [[_ sym doc] form]
-              (update ns->vars current-ns conj
-                {:sym sym
+              (update-in ns->vars [current-ns sym] merge
+                {:type :cljs
+                 :sym sym
                  :meta {:doc (when (string? doc)
-                              doc)}
+                               doc)}
                  :source (with-out-str
                            (clojure.pprint/pprint
                              form))
                  :url (str "/cljs/" current-ns "/"
                         (java.net.URLEncoder/encode (str sym) "UTF-8"))}))
-            ns->vars))
+            (and current-ns
+                 (list? form)
+                 (= 'defexample (first form)))
+            (let [[_ sym & args] form
+                  examples (if (map? (first args)) args (list (apply hash-map args)))
+                  examples (mapv (fn [example]
+                                   (update example :def
+                                     (fn [def]
+                                       (with-out-str
+                                         (clojure.pprint/pprint
+                                           def)))))
+                             examples)]
+              (update-in ns->vars [current-ns sym] assoc
+                :examples examples))
+            :else ns->vars))
         ns->vars))))
 
 (defn get-cljs-nses-and-vars []
@@ -56,7 +72,11 @@
           (rest files)
           (read-cljs-file ns->vars f))
         (recur (rest files) ns->vars))
-      ns->vars)))
+      (reduce
+        (fn [m [k v]]
+          (update m k concat (vals v)))
+        {}
+        ns->vars))))
 
 (defn get-clj-nses []
   (map #(hash-map
@@ -65,23 +85,17 @@
           :url (str "/clj/" %))
     (all-ns)))
 
-(defn get-cljs-nses []
+(defn get-cljs-nses [cljs-nses-and-vars]
   (map #(hash-map
           :sym %
           :type :cljs
           :url (str "/cljs/" %))
-    (keys (get-cljs-nses-and-vars))))
-
-(defn get-nses []
-  (let [clj-nses (get-clj-nses)
-        cljs-nses (get-cljs-nses)]
-    (->> (concat clj-nses cljs-nses)
-         (sort-by :sym)
-         vec)))
+    (keys cljs-nses-and-vars)))
 
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
-    {:sym var-sym
+    {:type :clj
+     :sym var-sym
      :url (str "/clj/" ns-sym "/"
             (java.net.URLEncoder/encode (str var-sym) "UTF-8"))
      :meta (-> sym
@@ -111,13 +125,19 @@
        (sort-by :sym)
        vec))
 
-(defn get-cljs-vars [ns]
-  (->> (get (get-cljs-nses-and-vars) ns)
+(defn get-cljs-vars [cljs-nses-and-vars ns]
+  (->> (get cljs-nses-and-vars ns)
        (sort-by :sym)
        vec))
 
-(defn page [nses type ns-sym var-sym]
-  (let [vars (case type
+(defn page [type ns-sym var-sym]
+  (let [clj-nses (get-clj-nses)
+        cljs-nses-and-vars (get-cljs-nses-and-vars)
+        cljs-nses (get-cljs-nses cljs-nses-and-vars)
+        nses (->> (concat clj-nses cljs-nses)
+                  (sort-by :sym)
+                  vec)
+        vars (case type
                clj (cond
                      var-sym [(get-clj-var-info ns-sym var-sym)]
                      ns-sym (get-clj-vars ns-sym))
@@ -125,8 +145,8 @@
                       var-sym [(some (fn [var]
                                        (when (-> var :sym (= var-sym))
                                          var))
-                                 (get-cljs-vars ns-sym))]
-                      ns-sym (get-cljs-vars ns-sym))
+                                 (get-cljs-vars cljs-nses-and-vars ns-sym))]
+                      ns-sym (get-cljs-vars cljs-nses-and-vars ns-sym))
                nil)
         state (atom {:nses nses
                      :ns-sym ns-sym
@@ -147,15 +167,14 @@
   (or (when (= uri "/")
         {:status 200
          :headers {"Content-Type" "text/html"}
-         :body (page (get-nses) nil nil nil)})
+         :body (page nil nil nil)})
       (let [[type ns var] (->> (str/split uri #"/")
                                (remove empty?)
                                (mapv #(-> % (java.net.URLDecoder/decode "UTF-8") symbol)))]
         (when (contains? #{'clj 'cljs} type)
-          (let [nses (get-nses)]
-            {:status 200
-             :headers {"Content-Type" "text/html"}
-             :body (page nses type ns var)})))
+          {:status 200
+           :headers {"Content-Type" "text/html"}
+           :body (page type ns var)}))
       (when (= uri "/eval")
         {:status 200
          :headers {"Content-Type" "text/plain"}

@@ -3,6 +3,7 @@
             [rum.core :as rum]
             [dynadoc.common :as common]
             [paren-soup.core :as ps])
+  (:require-macros [dynadoc.example :refer [defexample]])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))
@@ -42,6 +43,10 @@
       (set! (.-contentEditable edit) true))
     (ps/init paren-soup
       (js->clj {:compiler-fn compiler-fn}))))
+
+(defexample init-paren-soup
+  :doc "This is a test"
+  :def (init-paren-soup))
 
 (defn toggle-instarepl [show?]
   (let [instarepls (-> js/document
