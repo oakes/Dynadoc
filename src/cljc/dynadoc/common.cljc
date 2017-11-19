@@ -4,7 +4,8 @@
 
 (def meta-keys [:file :arglists :doc])
 
-(defn var->html [var-sym {:keys [sym url meta source spec examples]}]
+(defn var->html [{:keys [var-sym tests? instarepl? toggle-tests toggle-instarepl]}
+                 {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
      (into (if var-sym
@@ -24,9 +25,21 @@
      (when doc
        [:div {:class "section doc"} doc])
      (when (and var-sym (seq examples))
-       (into [:div [:h2 (if (= (count examples) 1)
-                          "Example"
-                          "Examples")]]
+       (into [:div
+              [:h2
+               (if (= (count examples) 1)
+                 "Example"
+                 "Examples")
+               [:div {:class "button"
+                      :on-click toggle-tests}
+                (if tests?
+                  "Hide Tests"
+                  "Show Tests")]
+               [:div {:class "button"
+                      :on-click toggle-instarepl}
+                (if instarepl?
+                  "Hide InstaREPL"
+                  "Show InstaREPL")]]]
          (mapv (fn [{:keys [doc def]}]
                  [:div {:class "section"}
                   [:div {:class "section doc"} doc]
@@ -42,7 +55,7 @@
                 :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]]])]))
 
 (rum/defc app < rum/reactive [state]
-  (let [{:keys [nses ns-sym var-sym vars]} @state]
+  (let [{:keys [nses vars] :as state} (rum/react state)]    
     [:div
      (into [:div {:class "nses"}]
        (mapv (fn [sym]
@@ -50,5 +63,5 @@
                       (str sym)]])
          nses))
      (into [:div {:class "vars"}]
-       (mapv (partial var->html var-sym) vars))]))
+       (mapv (partial var->html state) vars))]))
 

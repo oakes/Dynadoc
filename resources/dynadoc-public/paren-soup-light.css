@@ -3,7 +3,7 @@ html, body, .paren-soup {
 }
 
 .paren-soup {
-	font-size: 16px;
+	font-size: 18px;
 	font-family: monospace;
 	color: gray;
 	caret-color: black;
