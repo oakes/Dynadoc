@@ -33,10 +33,16 @@
           (if (and current-ns
                    (list? form)
                    (contains? #{'def 'defn} (first form)))
-            (update ns->vars current-ns conj
-              {:sym (second form)
-               :url (str "/cljs/" current-ns "/"
-                      (java.net.URLEncoder/encode (str (second form)) "UTF-8"))})
+            (let [[_ sym doc] form]
+              (update ns->vars current-ns conj
+                {:sym sym
+                 :meta {:doc (when (string? doc)
+                              doc)}
+                 :source (with-out-str
+                           (clojure.pprint/pprint
+                             form))
+                 :url (str "/cljs/" current-ns "/"
+                        (java.net.URLEncoder/encode (str sym) "UTF-8"))}))
             ns->vars))
         ns->vars))))
 
