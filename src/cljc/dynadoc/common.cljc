@@ -79,9 +79,12 @@
   (let [{:keys [nses ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
     [:div
      (into [:div {:class "nses"}]
-       (mapv (fn [sym]
-               [:div [:a {:href (str "/" sym)}
-                      (str sym)]])
+       (mapv (fn [{:keys [sym type url]}]
+               [:div
+                (when (= type :cljs)
+                  [:div {:class "tag"} "CLJS"])
+                [:a {:href url}
+                 (str sym)]])
          nses))
      (if ns-sym
        (into [:div {:class "vars"}

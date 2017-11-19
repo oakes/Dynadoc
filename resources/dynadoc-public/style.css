@@ -50,3 +50,9 @@ html, body, .paren-soup {
 	background-color: lightgray;
   	cursor: pointer;
 }
+.tag {
+    float: left;
+    margin-right: 5px;
+    border-radius: 5px;
+  	background-color: lightgreen;
+}

@@ -12,49 +12,120 @@
             [rum.core :as rum]
             [dynadoc.common :as common]
             [dynadoc.example :as ex]
-            [eval-soup.core :as es]))
+            [eval-soup.core :as es]
+            [clojure.tools.reader :as r]
+            [clojure.tools.reader.reader-types :refer [indexing-push-back-reader]]))
 
 (defonce web-server (atom nil))
 (defonce options (atom nil))
 
+(defn read-cljs-file [ns->vars f]
+  (let [reader (indexing-push-back-reader (slurp f))]
+    (loop [current-ns nil
+           ns->vars ns->vars]
+      (if-let [form (try (r/read {:eof nil} reader)
+                      (catch Exception _ '(comment "Reader error")))]
+        (recur
+          (if (and (list? form)
+                   (= (first form) 'ns))
+            (second form)
+            current-ns)
+          (if (and current-ns
+                   (list? form)
+                   (contains? #{'def 'defn} (first form)))
+            (update ns->vars current-ns conj
+              {:sym (second form)
+               :url (str "/cljs/" current-ns "/"
+                      (java.net.URLEncoder/encode (str (second form)) "UTF-8"))})
+            ns->vars))
+        ns->vars))))
+
+(defn get-cljs-nses-and-vars []
+  (loop [files (file-seq (io/file "."))
+         ns->vars {}]
+    (if-let [f (first files)]
+      (if (and (.isFile f)
+               (-> f .getName (.endsWith ".cljs")))
+        (recur
+          (rest files)
+          (read-cljs-file ns->vars f))
+        (recur (rest files) ns->vars))
+      ns->vars)))
+
+(defn get-clj-nses []
+  (map #(hash-map
+          :sym (ns-name %)
+          :type :clj
+          :url (str "/clj/" %))
+    (all-ns)))
+
+(defn get-cljs-nses []
+  (map #(hash-map
+          :sym %
+          :type :cljs
+          :url (str "/cljs/" %))
+    (keys (get-cljs-nses-and-vars))))
+
 (defn get-nses []
-  (->> (all-ns) (map ns-name) sort vec))
+  (let [clj-nses (get-clj-nses)
+        cljs-nses (get-cljs-nses)]
+    (->> (concat clj-nses cljs-nses)
+         (sort-by :sym)
+         vec)))
 
-(defn get-vars [ns]
-  (->> (ns-publics ns) keys sort vec))
+(defn get-clj-var-info [ns-sym var-sym]
+  (let [sym (symbol (str ns-sym) (str var-sym))]
+    {:sym var-sym
+     :url (str "/clj/" ns-sym "/"
+            (java.net.URLEncoder/encode (str var-sym) "UTF-8"))
+     :meta (-> sym
+               find-var
+               meta
+               (select-keys common/meta-keys))
+     :source (repl/source-fn sym)
+     :spec (try
+             (require 'clojure.spec.alpha)
+             (let [form (resolve (symbol "clojure.spec.alpha" "form"))]
+               (with-out-str
+                 (clojure.pprint/pprint
+                   (form sym))))
+             (catch Exception _))
+     :examples (mapv (fn [example]
+                       (update example :def
+                         (fn [def]
+                           (with-out-str
+                             (clojure.pprint/pprint
+                               def)))))
+                 (get-in @ex/examples [ns-sym var-sym]))}))
 
-(defn page [nses ns-sym var-sym]
-  (let [vars (cond
-               var-sym [var-sym]
-               ns-sym (get-vars ns-sym))
-        vars (mapv (fn [var-sym]
-                     (let [sym (symbol (str ns-sym) (str var-sym))]
-                       {:sym var-sym
-                        :url (str "/" ns-sym "/"
-                               (java.net.URLEncoder/encode (str var-sym) "UTF-8"))
-                        :meta (-> sym
-                                  find-var
-                                  meta
-                                  (select-keys common/meta-keys))
-                        :source (repl/source-fn sym)
-                        :spec (try
-                                (require 'clojure.spec.alpha)
-                                (let [form (resolve (symbol "clojure.spec.alpha" "form"))]
-                                  (with-out-str
-                                    (clojure.pprint/pprint
-                                      (form sym))))
-                                (catch Exception _))
-                        :examples (mapv (fn [example]
-                                          (update example :def
-                                            (fn [def]
-                                              (with-out-str
-                                                (clojure.pprint/pprint
-                                                  def)))))
-                                    (get-in @ex/examples [ns-sym var-sym]))}))
-               vars)
+(defn get-clj-vars [ns]
+  (->> (ns-publics ns)
+       keys
+       (mapv (partial get-clj-var-info ns))
+       (sort-by :sym)
+       vec))
+
+(defn get-cljs-vars [ns]
+  (->> (get (get-cljs-nses-and-vars) ns)
+       (sort-by :sym)
+       vec))
+
+(defn page [nses type ns-sym var-sym]
+  (let [vars (case type
+               clj (cond
+                     var-sym [(get-clj-var-info ns-sym var-sym)]
+                     ns-sym (get-clj-vars ns-sym))
+               cljs (cond
+                      var-sym [(some (fn [var]
+                                       (when (-> var :sym (= var-sym))
+                                         var))
+                                 (get-cljs-vars ns-sym))]
+                      ns-sym (get-cljs-vars ns-sym))
+               nil)
         state (atom {:nses nses
                      :ns-sym ns-sym
-                     :ns-meta (some-> ns-sym the-ns meta)
+                     :ns-meta (when (= type 'clj)
+                                (some-> ns-sym the-ns meta))
                      :var-sym var-sym
                      :vars vars})]
     (-> "template.html" io/resource slurp
@@ -70,15 +141,15 @@
   (or (when (= uri "/")
         {:status 200
          :headers {"Content-Type" "text/html"}
-         :body (page (get-nses) nil nil)})
-      (let [nses (get-nses)
-            [ns var] (->> (str/split uri #"/")
-                          (remove empty?)
-                          (mapv #(-> % (java.net.URLDecoder/decode "UTF-8") symbol)))]
-        (when (contains? (set nses) ns)
-          {:status 200
-           :headers {"Content-Type" "text/html"}
-           :body (page nses ns var)}))
+         :body (page (get-nses) nil nil nil)})
+      (let [[type ns var] (->> (str/split uri #"/")
+                               (remove empty?)
+                               (mapv #(-> % (java.net.URLDecoder/decode "UTF-8") symbol)))]
+        (when (contains? #{'clj 'cljs} type)
+          (let [nses (get-nses)]
+            {:status 200
+             :headers {"Content-Type" "text/html"}
+             :body (page nses type ns var)})))
       (when (= uri "/eval")
         {:status 200
          :headers {"Content-Type" "text/plain"}
