@@ -49,8 +49,7 @@
                  (contains? #{'def 'defn} (first form)))
             (let [[_ sym & args] form]
               (update-in ns->vars [current-ns sym] merge
-                {:type :cljs
-                 :sym sym
+                {:sym sym
                  :meta {:doc (when (string? (first args))
                                (first args))
                         :arglists (when (= 'defn (first form))
@@ -110,8 +109,7 @@
 
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
-    {:type :clj
-     :sym var-sym
+    {:sym var-sym
      :url (str "/clj/" ns-sym "/"
             (java.net.URLEncoder/encode (str var-sym) "UTF-8"))
      :meta (-> sym
@@ -164,7 +162,8 @@
                                  (get-cljs-vars cljs-nses-and-vars ns-sym))]
                       ns-sym (get-cljs-vars cljs-nses-and-vars ns-sym))
                nil)
-        state (atom {:nses nses
+        state (atom {:type (keyword (name type))
+                     :nses nses
                      :ns-sym ns-sym
                      :ns-meta (when (= type 'clj)
                                 (some-> ns-sym the-ns meta))
