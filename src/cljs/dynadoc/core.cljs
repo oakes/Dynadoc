@@ -17,6 +17,9 @@
 (rum/mount (common/app state)
   (.querySelector js/document "#app"))
 
+(defn disable-cljs-instarepl []
+  (swap! state assoc :disable-cljs-instarepl? true))
+
 (when (:var-sym @state)
   (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
     (set! (.-display (.-style button)) "inline-block")))
