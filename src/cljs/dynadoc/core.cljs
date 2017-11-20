@@ -4,7 +4,6 @@
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
             [eval-soup.core :as es])
-  (:require-macros [dynadoc.example :refer [defexample]])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))

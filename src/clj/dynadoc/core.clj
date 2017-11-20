@@ -63,7 +63,14 @@
                  (list? form)
                  (symbol? (first form))
                  (= "defexample" (name (first form))))
-            (let [[_ sym & args] form
+            (let [[_ k & args] form
+                  ns-sym (symbol (or (try (symbol (namespace k))
+                                       (catch Exception _))
+                                     current-ns))
+                  k (cond
+                      (symbol? k) (symbol (name k))
+                      (keyword? k) (keyword (name k))
+                      :else k)
                   examples (if (map? (first args)) args (list (apply hash-map args)))
                   examples (mapv (fn [example]
                                    (update example :def
@@ -72,7 +79,7 @@
                                          (clojure.pprint/pprint
                                            def)))))
                              examples)]
-              (update-in ns->vars [current-ns sym] assoc
+              (update-in ns->vars [ns-sym k] assoc
                 :examples examples))
             :else ns->vars))
         ns->vars))))

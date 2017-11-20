@@ -7,9 +7,9 @@
 piece of Clojure data. If `k` is not a namespace-qualified symbol or
 keyword, it will be associated with the current namespace."
   [k & args]
-  (let [ns-sym (symbol (or (try (namespace k)
+  (let [ns-sym (symbol (or (try (symbol (namespace k))
                              (catch Exception _))
-                           (str *ns*)))
+                           (symbol (str *ns*))))
         k (cond
             (symbol? k) (symbol (name k))
             (keyword? k) (keyword (name k))
