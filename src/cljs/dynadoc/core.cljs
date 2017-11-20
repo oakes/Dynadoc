@@ -3,7 +3,8 @@
             [rum.core :as rum]
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
-            [eval-soup.core :as es])
+            [eval-soup.core :as es]
+            [goog.object :as gobj])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))
@@ -24,22 +25,20 @@
       (pr-str (into [(str "(in-ns '" (:ns-sym @state) ")")] forms)))
     (catch js/Error _ (cb []))))
 
-(defn form->serializable [form]
-  (if (instance? js/Error form)
-    (array (or (some-> form .-cause .-message) (.-message form))
-      (.-fileName form) (.-lineNumber form))
-    (pr-str form)))
-
 (defn cljs-compiler-fn [forms cb]
-  (es/code->results
-    (into [(str "(ns " (:ns-sym @state) ")")] forms)
-    (fn [results]
-      (->> results
-           rest ; ignore the result of ns
-           (mapv form->serializable)
-           cb))
-    {:custom-load (fn [opts cb]
-                    (cb {:lang :clj :source ""}))}))
+  (let [iframe (.querySelector js/document "#cljsapp")
+        forms (cons (str "(ns " (:ns-sym @state) ")")
+                forms)]
+    (.addEventListener js/window "message"
+      (fn on-message [e]
+        (let [data (.-data e)]
+          (-> (gobj/get data "results")
+              (.slice 1) ; ignore the result of ns
+              cb))
+        (.removeEventListener js/window "message" on-message)))
+    (.postMessage (.-contentWindow iframe)
+      (clj->js {:type "instarepl" :forms (into-array forms)})
+      "*")))
 
 (defn init-paren-soup []
   (doseq [paren-soup (-> js/document (.querySelectorAll ".paren-soup") array-seq)]

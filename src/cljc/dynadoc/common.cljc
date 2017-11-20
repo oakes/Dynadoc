@@ -77,7 +77,7 @@
          (expandable-section "Source" url (delay (source->html source)))))]))
 
 (rum/defc app < rum/reactive [state]
-  (let [{:keys [nses ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
+  (let [{:keys [nses ns-sym ns-meta var-sym vars app-url] :as state} (rum/react state)]
     [:div
      (into [:div {:class "nses"}]
        (mapv (fn [{:keys [sym type url]}]
@@ -96,5 +96,10 @@
                    [:div {:class "section doc"} doc])])]
          (mapv (partial var->html state) vars))
        [:div {:class "vars"}
-        [:center [:h1 "Welcome to Dynadoc"]]])]))
+        [:center [:h1 "Welcome to Dynadoc"]]])
+     (when app-url
+       [:iframe {:id "cljsapp"
+                 :style {:background-color "white"
+                         :visibility :hidden}
+                 :src app-url}])]))
 
