@@ -63,11 +63,11 @@
      (when (seq examples)
        (if var-sym
          (into [:div {:class "section"}
-                [:h2 "Examples"
+                [:h2 "Example"
                  (when-not (and (= type :cljs) disable-cljs-instarepl?)
                    (toggle-instarepl-button toggle-instarepl))]]
            (examples->html examples))
-         (expandable-section "Examples" url
+         (expandable-section "Example" url
            (delay (into [:div] (examples->html examples))))))
      (when source
        (if var-sym
