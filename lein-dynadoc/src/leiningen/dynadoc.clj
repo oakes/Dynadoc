@@ -12,18 +12,19 @@
     :validate [#(< 0 % 0x10000) "Must be an integer between 0 and 65536"]]
    [nil "--host HOST" "The hostname that Dynadoc listens on"
     :default "0.0.0.0"]
+   [nil "--url URL" "The URL that the ClojureScript app is being served on"]
    ["-u" "--usage" "Show CLI usage options"]])
 
 
 (defn start-dynadoc
-  [{:keys [main] :as project} {:keys [port host] :as options}]
+  [{:keys [main] :as project} {:keys [port host url] :as options}]
   (eval/eval-in-project
     (deps/add-if-missing
       project
       '[dynadoc/lein-dynadoc "1.0.0"])
     `(do
        (dynadoc.core/start
-         {:port ~port :ip ~host})
+         {:port ~port :ip ~host :url ~url})
        (when '~main (require '~main)))
     `(require 'dynadoc.core)))
 

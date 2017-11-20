@@ -7,9 +7,11 @@
 
 (core/deftask dynadoc
   [p port PORT int "The port that Dynadoc runs on"
-   _ host HOST str "The hostname that Dynadoc listens on"]
+   _ host HOST str "The hostname that Dynadoc listens on"
+   _ url URL str "The URL that the ClojureScript app is being served on"]
   (core/with-pass-thru _
     (start {:port (or port 4000)
-            :ip (or host "0.0.0.0")})))
+            :ip (or host "0.0.0.0")
+            :url url})))
 
 
