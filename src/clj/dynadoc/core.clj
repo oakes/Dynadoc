@@ -46,14 +46,17 @@
           (cond
             (and current-ns
                  (list? form)
-                 (contains? #{'def 'defn} (first form)))
-            (let [[_ sym & args] form]
+                 (contains? #{'def 'defn 'defonce} (first form))
+                 (not (some-> form second meta :private)))
+            (let [[call sym & args] form]
               (update-in ns->vars [current-ns sym] merge
                 {:sym sym
-                 :meta {:doc (when (string? (first args))
-                               (first args))
-                        :arglists (when (= 'defn (first form))
-                                    (get-cljs-arglists args))}
+                 :meta (merge
+                         (when (= call 'defn)
+                           {:doc (when (string? (first args))
+                                   (first args))
+                            :arglists (get-cljs-arglists args)})
+                         (select-keys (meta sym) common/meta-keys))
                  :source (with-out-str
                            (clojure.pprint/pprint
                              form))
