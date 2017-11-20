@@ -40,11 +40,11 @@
 
 (deftask local []
   (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "prod-resources"})
-  (comp (cljs :optimizations :advanced) (sift) (pom) (jar) (install)))
+  (comp (cljs) (sift) (pom) (jar) (install)))
 
 (deftask deploy []
   (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "prod-resources"})
-  (comp (cljs :optimizations :advanced) (sift) (pom) (jar) (push)))
+  (comp (cljs) (sift) (pom) (jar) (push)))
 
 (deftask run []
   (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "dev-resources"})
@@ -52,7 +52,7 @@
     (watch)
     (nightlight :port 4000 :url "http://localhost:5000")
     (reload :asset-path "dynadoc-public")
-    (cljs :source-map true :optimizations :none :compiler-options {:asset-path "/main.out"})
+    (cljs)
     (with-pass-thru _
       (instrument)
       (dev-start {:port 5000 :url "http://localhost:5000"}))

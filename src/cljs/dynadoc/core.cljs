@@ -8,21 +8,6 @@
 
 (defonce state (atom {}))
 
-(reset! state
-  (-> (.querySelector js/document "#initial-state")
-      .-textContent
-      read-string))
-
-(rum/mount (common/app state)
-  (.querySelector js/document "#app"))
-
-(defn disable-cljs-instarepl []
-  (swap! state assoc :disable-cljs-instarepl? true))
-
-(when (:var-sym @state)
-  (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
-    (set! (.-display (.-style button)) "inline-block")))
-
 (defn clj-compiler-fn [forms cb]
   (try
     (.send XhrIo
@@ -76,7 +61,20 @@
         (-> ir .-style .-display (set! "none")))))
   (init-paren-soup))
 
-(swap! state assoc :toggle-instarepl toggle-instarepl)
+(defn init []
+  (reset! state
+    (-> (.querySelector js/document "#initial-state")
+        .-textContent
+        read-string))
+  (rum/mount (common/app state)
+    (.querySelector js/document "#app"))
+  (when (:var-sym @state)
+    (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
+      (set! (.-display (.-style button)) "inline-block")))
+  (swap! state assoc :toggle-instarepl toggle-instarepl)
+  (init-paren-soup))
 
-(init-paren-soup)
+(defn init-prod []
+  (init)
+  (swap! state assoc :disable-cljs-instarepl? true))
 

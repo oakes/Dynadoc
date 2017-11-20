@@ -178,7 +178,10 @@
                      :ns-meta (when (= type 'clj)
                                 (some-> ns-sym the-ns meta))
                      :var-sym var-sym
-                     :vars vars})]
+                     :vars vars
+                     :app-url (if (io/resource "dynadoc-public/app.js")
+                                "/app.html"
+                                (:url @options))})]
     (-> "template.html" io/resource slurp
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
