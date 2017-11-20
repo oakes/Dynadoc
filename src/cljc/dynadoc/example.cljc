@@ -39,7 +39,7 @@ keyword, it will be associated with the current namespace."
           (defexample square
             :doc "Multiply 2 by itself"
             :def (square 2)
-            :ret (fn [n] (= n 2))))}
+            :ret (fn [n] (= n 4))))}
   {:doc "Define multiple examples of a function"
    :def (defexample clojure.core/conj
           {:doc "Add a name to a vector"
