@@ -62,7 +62,8 @@
                         (java.net.URLEncoder/encode (str sym) "UTF-8"))}))
             (and current-ns
                  (list? form)
-                 (= 'defexample (first form)))
+                 (symbol? (first form))
+                 (= "defexample" (name (first form))))
             (let [[_ sym & args] form
                   examples (if (map? (first args)) args (list (apply hash-map args)))
                   examples (mapv (fn [example]
