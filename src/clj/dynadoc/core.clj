@@ -162,7 +162,7 @@
                                  (get-cljs-vars cljs-nses-and-vars ns-sym))]
                       ns-sym (get-cljs-vars cljs-nses-and-vars ns-sym))
                nil)
-        state (atom {:type (keyword (name type))
+        state (atom {:type (some-> type name keyword)
                      :nses nses
                      :ns-sym ns-sym
                      :ns-meta (when (= type 'clj)
