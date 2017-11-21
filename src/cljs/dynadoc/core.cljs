@@ -73,7 +73,3 @@
   (swap! state assoc :toggle-instarepl toggle-instarepl)
   (init-paren-soup))
 
-(defn init-prod []
-  (init)
-  (swap! state assoc :disable-cljs-instarepl? true))
-

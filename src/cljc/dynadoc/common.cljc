@@ -40,7 +40,7 @@
                                   (on-click (swap! on? not)))])}
      (if @on? "Hide InstaREPL" "Show InstaREPL")]))
 
-(defn var->html [{:keys [type var-sym toggle-instarepl disable-cljs-instarepl?]}
+(defn var->html [{:keys [type var-sym toggle-instarepl app-url]}
                  {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
@@ -64,7 +64,7 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"
-                 (when-not (and (= type :cljs) disable-cljs-instarepl?)
+                 (when (or (= type :clj) app-url)
                    (toggle-instarepl-button toggle-instarepl))]]
            (examples->html examples))
          (expandable-section "Example" url
