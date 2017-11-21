@@ -4,8 +4,6 @@ This is not your father's documentation generator. Dynadoc creates interactive d
 
 From a browser-based UI, you can see any function's docstring and source code. It also allows you to annotate your own functions with code examples for Dynadoc to include -- an elegant improvement over shoving them in docstrings.
 
-See [the website](https://sekao.net/dynadoc/) for instructions on how to use it.
-
 ## Licensing
 
 All files that originate from this project are dedicated to the public domain. I would love pull requests, and will assume that they are also dedicated to the public domain.
