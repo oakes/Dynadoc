@@ -32,6 +32,13 @@
         (recur (rest args) arglists))
       arglists)))
 
+(defn stringify-example [example]
+  (update example :def
+    (fn [def]
+      (with-out-str
+        (clojure.pprint/pprint
+          def)))))
+
 (defn read-cljs-file [ns->vars f]
   (let [reader (indexing-push-back-reader (slurp f))]
     (loop [current-ns nil
@@ -65,18 +72,16 @@
             (and current-ns
                  (list? form)
                  (symbol? (first form))
-                 (= "defexample" (name (first form))))
-            (let [[_ k & args] form
+                 (contains? #{'defexample 'defexamples} (-> form first name symbol)))
+            (let [[sym k & args] form
+                  sym (-> sym name symbol)
                   ns-sym (or (ex/parse-ns k) current-ns)
-                  k (ex/parse-val k)
-                  examples (mapv (fn [example]
-                                   (update example :def
-                                     (fn [def]
-                                       (with-out-str
-                                         (clojure.pprint/pprint
-                                           def)))))
-                             (ex/parse-examples args))]
-              (update-in ns->vars [ns-sym k] assoc
+                  var-sym (ex/parse-val k)
+                  examples (case sym
+                             defexample [(ex/parse-example args)]
+                             defexamples (mapv ex/parse-example args))
+                  examples (mapv stringify-example examples)]
+              (update-in ns->vars [ns-sym var-sym] assoc
                 :examples examples))
             :else ns->vars))
         ns->vars))))
@@ -130,13 +135,8 @@
                  (clojure.pprint/pprint
                    (form sym))))
              (catch Exception _))
-     :examples (mapv (fn [example]
-                       (update example :def
-                         (fn [def]
-                           (with-out-str
-                             (clojure.pprint/pprint
-                               def)))))
-                 (get-in @ex/examples [ns-sym var-sym]))}))
+     :examples (mapv stringify-example
+                 (get-in @ex/registry-ref [ns-sym var-sym]))}))
 
 (defn get-clj-vars [ns]
   (->> (ns-publics ns)

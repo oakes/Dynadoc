@@ -5,7 +5,6 @@
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj])
-  (:require-macros [dynadoc.example :refer [defexample]])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))
@@ -34,10 +33,6 @@
       (.-fileName form) (.-lineNumber form))
     (pr-str form)))
 
-(defexample form->serializable
-  {:def (form->serializable '(+ 1 2 3))}
-  {:def (form->serializable (js/Error. "This is an error!"))})
-
 (defn cljs-compiler-fn [forms cb]
   (es/code->results
     (into [(str "(ns " (:ns-sym @state) ")")] forms)
@@ -58,17 +53,6 @@
                                clj-compiler-fn
                                cljs-compiler-fn)}))))
 
-(defn toggle-instarepl [show?]
-  (let [instarepls (-> js/document
-                       (.querySelectorAll ".instarepl")
-                       array-seq)]
-    (if show?
-      (doseq [ir instarepls]
-        (-> ir .-style .-display (set! "list-item")))
-      (doseq [ir instarepls]
-        (-> ir .-style .-display (set! "none")))))
-  (init-paren-soup))
-
 (defn disable-cljs-instarepl []
   (swap! state assoc :disable-cljs-instarepl? true))
 
@@ -82,7 +66,6 @@
   (when (:var-sym @state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block")))
-  (swap! state assoc :toggle-instarepl toggle-instarepl)
   (init-paren-soup))
 
 (init)
