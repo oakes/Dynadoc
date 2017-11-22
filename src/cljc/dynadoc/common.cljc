@@ -40,7 +40,7 @@
                                   (on-click (swap! on? not)))])}
      (if @on? "Hide InstaREPL" "Show InstaREPL")]))
 
-(defn var->html [{:keys [type var-sym toggle-instarepl app-url]}
+(defn var->html [{:keys [type var-sym toggle-instarepl disable-cljs-instarepl?]}
                  {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
@@ -64,7 +64,8 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"
-                 (when (or (= type :clj) app-url)
+                 (when (or (= type :clj)
+                           (not disable-cljs-instarepl?))
                    (toggle-instarepl-button toggle-instarepl))]]
            (examples->html examples))
          (expandable-section "Example" url
@@ -77,7 +78,7 @@
          (expandable-section "Source" url (delay (source->html source)))))]))
 
 (rum/defc app < rum/reactive [state]
-  (let [{:keys [nses ns-sym ns-meta var-sym vars app-url] :as state} (rum/react state)]
+  (let [{:keys [nses ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
     [:div
      (into [:div {:class "nses"}]
        (mapv (fn [{:keys [sym type url]}]
@@ -96,10 +97,5 @@
                    [:div {:class "section doc"} doc])])]
          (mapv (partial var->html state) vars))
        [:div {:class "vars"}
-        [:center [:h1 "Welcome to Dynadoc"]]])
-     (when app-url
-       [:iframe {:id "cljsapp"
-                 :style {:background-color "white"
-                         :visibility :hidden}
-                 :src app-url}])]))
+        [:center [:h1 "Welcome to Dynadoc"]]])]))
 

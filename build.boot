@@ -56,6 +56,6 @@
     (cljs)
     (with-pass-thru _
       (instrument)
-      (dev-start {:port 5000 :url "http://localhost:5000"}))
+      (dev-start {:port 5000}))
     (target)))
 

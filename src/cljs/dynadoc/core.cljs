@@ -5,6 +5,7 @@
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj])
+  (:require-macros [dynadoc.example :refer [defexample]])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))
@@ -25,20 +26,28 @@
       (pr-str (into [(str "(in-ns '" (:ns-sym @state) ")")] forms)))
     (catch js/Error _ (cb []))))
 
+(defn form->serializable
+  "Converts the input to either a string or (if an error object) an array of data"
+  [form]
+  (if (instance? js/Error form)
+    (array (or (some-> form .-cause .-message) (.-message form))
+      (.-fileName form) (.-lineNumber form))
+    (pr-str form)))
+
+(defexample form->serializable
+  {:def (form->serializable '(+ 1 2 3))}
+  {:def (form->serializable (js/Error. "This is an error!"))})
+
 (defn cljs-compiler-fn [forms cb]
-  (let [iframe (.querySelector js/document "#cljsapp")
-        forms (cons (str "(ns " (:ns-sym @state) ")")
-                forms)]
-    (.addEventListener js/window "message"
-      (fn on-message [e]
-        (let [data (.-data e)]
-          (-> (gobj/get data "results")
-              (.slice 1) ; ignore the result of ns
-              cb))
-        (.removeEventListener js/window "message" on-message)))
-    (.postMessage (.-contentWindow iframe)
-      (clj->js {:type "instarepl" :forms (into-array forms)})
-      "*")))
+  (es/code->results
+    (into [(str "(ns " (:ns-sym @state) ")")] forms)
+    (fn [results]
+      (->> results
+           rest ; ignore the result of ns
+           (mapv form->serializable)
+           cb))
+    {:custom-load (fn [opts cb]
+                    (cb {:lang :clj :source ""}))}))
 
 (defn init-paren-soup []
   (doseq [paren-soup (-> js/document (.querySelectorAll ".paren-soup") array-seq)]
@@ -60,6 +69,9 @@
         (-> ir .-style .-display (set! "none")))))
   (init-paren-soup))
 
+(defn disable-cljs-instarepl []
+  (swap! state assoc :disable-cljs-instarepl? true))
+
 (defn init []
   (reset! state
     (-> (.querySelector js/document "#initial-state")
@@ -72,4 +84,6 @@
       (set! (.-display (.-style button)) "inline-block")))
   (swap! state assoc :toggle-instarepl toggle-instarepl)
   (init-paren-soup))
+
+(init)
 

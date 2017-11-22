@@ -172,8 +172,7 @@
                      :ns-meta (when (= type 'clj)
                                 (some-> ns-sym the-ns meta))
                      :var-sym var-sym
-                     :vars vars
-                     :app-url (:url @options)})]
+                     :vars vars})]
     (-> "template.html" io/resource slurp
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
@@ -221,12 +220,7 @@
           (reset! options)
           (run-server app)
           (reset! web-server)
-          print-server)
-     (when (io/resource "dynadoc-public/app.js")
-       (when (:url @options)
-         (println "Found dynadoc-public/app.js so the :url option will be ignored"))
-       (swap! options assoc :url "/app.html"))
-     @web-server)))
+          print-server))))
 
 (defn dev-start [opts]
   (when-not @web-server
