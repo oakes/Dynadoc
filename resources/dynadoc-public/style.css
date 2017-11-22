@@ -37,22 +37,9 @@ html, body, .paren-soup {
 .section {
     margin: 10px;
 }
-.button {
-  	display: none;
-  	font-size: 14px;
-    padding: 15px;
-    margin: 5px;
-    border-radius: 5px;
-  	background-color: #C0C0C0;
-    user-select: none;
-}
-.button:hover {
-	background-color: lightgray;
-  	cursor: pointer;
-}
 .tag {
     float: left;
     margin-right: 5px;
     border-radius: 5px;
-  	background-color: lightgreen;
+    background-color: lightgreen;
 }

@@ -16,12 +16,13 @@
      (when @expanded?
        @content)]))
 
-(defn examples->html [examples]
+(defn examples->html [hide-instarepl? examples]
   (mapv (fn [{:keys [doc def]}]
           [:div {:class "section"}
            [:div {:class "section doc"} doc]
            [:div {:class "paren-soup"}
-            [:div {:class "instarepl" :style {:display "none"}}]
+            (when-not hide-instarepl?
+              [:div {:class "instarepl" :style {:display "list-item"}}])
             [:div {:class "content edit"
                    :dangerouslySetInnerHTML {:__html (hs/code->html def)}}]]])
     examples))
@@ -31,16 +32,7 @@
    [:div {:class "content"
           :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
 
-(rum/defcs toggle-instarepl-button < (rum/local false ::on?)
-  [state on-click]
-  (let [on? (::on? state)]
-    [:div {:class "button var-button"
-           #?@(:cljs [:on-click (fn [e]
-                                  (.preventDefault e)
-                                  (on-click (swap! on? not)))])}
-     (if @on? "Hide InstaREPL" "Show InstaREPL")]))
-
-(defn var->html [{:keys [type var-sym toggle-instarepl disable-cljs-instarepl?]}
+(defn var->html [{:keys [var-sym type disable-cljs-instarepl?] :as state}
                  {:keys [sym url meta source spec examples]}]
   (let [{:keys [arglists doc]} meta]
     [:div
@@ -63,13 +55,10 @@
      (when (seq examples)
        (if var-sym
          (into [:div {:class "section"}
-                [:h2 "Example"
-                 (when (or (= type :clj)
-                           (not disable-cljs-instarepl?))
-                   (toggle-instarepl-button toggle-instarepl))]]
-           (examples->html examples))
+                [:h2 "Example"]]
+           (examples->html (and (= type :cljs) disable-cljs-instarepl?) examples))
          (expandable-section "Example" url
-           (delay (into [:div] (examples->html examples))))))
+           (delay (into [:div] (examples->html true examples))))))
      (when source
        (if var-sym
          [:div {:class "section"}
