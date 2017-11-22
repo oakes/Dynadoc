@@ -11,7 +11,6 @@
             [org.httpkit.server :refer [run-server]]
             [rum.core :as rum]
             [dynadoc.common :as common]
-            [dynadoc.example :as ex]
             [eval-soup.core :as es]
             [clojure.tools.reader :as r]
             [clojure.tools.reader.reader-types :refer [indexing-push-back-reader]]))
@@ -73,16 +72,22 @@
                  (list? form)
                  (symbol? (first form))
                  (contains? #{'defexample 'defexamples} (-> form first name symbol)))
-            (let [[sym k & args] form
-                  sym (-> sym name symbol)
-                  ns-sym (or (ex/parse-ns k) current-ns)
-                  var-sym (ex/parse-val k)
-                  examples (case sym
-                             defexample [(ex/parse-example args)]
-                             defexamples (mapv ex/parse-example args))
-                  examples (mapv stringify-example examples)]
-              (update-in ns->vars [ns-sym var-sym] assoc
-                :examples examples))
+            (try
+              (require 'dynadoc.example)
+              (let [parse-ns (resolve (symbol "dynadoc.example" "parse-ns"))
+                    parse-val (resolve (symbol "dynadoc.example" "parse-val"))
+                    parse-example (resolve (symbol "dynadoc.example" "parse-example"))
+                    [sym k & args] form
+                    sym (-> sym name symbol)
+                    ns-sym (or (parse-ns k) current-ns)
+                    var-sym (parse-val k)
+                    examples (case sym
+                               defexample [(parse-example args)]
+                               defexamples (mapv parse-example args))
+                    examples (mapv stringify-example examples)]
+                (update-in ns->vars [ns-sym var-sym] assoc
+                  :examples examples))
+              (catch Exception ns->vars))
             :else ns->vars))
         ns->vars))))
 
@@ -135,8 +140,12 @@
                  (clojure.pprint/pprint
                    (form sym))))
              (catch Exception _))
-     :examples (mapv stringify-example
-                 (get-in @ex/registry-ref [ns-sym var-sym]))}))
+     :examples (try
+                 (require 'dynadoc.example)
+                 (let [registry-ref (resolve (symbol "dynadoc.example" "registry-ref"))]
+                   (mapv stringify-example
+                     (get-in @registry-ref [ns-sym var-sym])))
+                 (catch Exception _))}))
 
 (defn get-clj-vars [ns]
   (->> (ns-publics ns)
