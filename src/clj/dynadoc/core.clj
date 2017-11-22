@@ -89,7 +89,9 @@
                (-> f .getName (.endsWith ".cljs")))
         (recur
           (rest files)
-          (read-cljs-file ns->vars f))
+          (try
+            (read-cljs-file ns->vars f)
+            (catch Exception ns->vars)))
         (recur (rest files) ns->vars))
       (reduce
         (fn [m [k v]]
