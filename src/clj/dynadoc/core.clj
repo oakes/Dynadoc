@@ -31,12 +31,19 @@
         (recur (rest args) arglists))
       arglists)))
 
-(defn stringify-example [example]
-  (update example :def
-    (fn [def]
-      (with-out-str
-        (clojure.pprint/pprint
-          def)))))
+(defn process-example [{:keys [body with-focus] :as example}]
+  (cond-> example
+          (some? with-focus)
+          (assoc :instarepl-fn
+            (let [{:keys [binding]} with-focus
+                  [_ binding-val] binding]
+              (list 'fn [binding-val] body)))
+          (some? body)
+          (assoc :body-str
+            (with-out-str
+              (clojure.pprint/pprint
+                (or (:init-expr with-focus)
+                    body))))))
 
 (defn read-cljs-file [ns->vars f]
   (let [reader (indexing-push-back-reader (slurp f))]
@@ -84,7 +91,7 @@
                     examples (case sym
                                defexample [(parse-example args)]
                                defexamples (mapv parse-example args))
-                    examples (mapv stringify-example examples)]
+                    examples (mapv process-example examples)]
                 (update-in ns->vars [ns-sym var-sym] assoc
                   :examples examples))
               (catch Exception _ ns->vars))
@@ -145,7 +152,7 @@
      :examples (try
                  (require 'dynadoc.example)
                  (let [registry-ref (resolve (symbol "dynadoc.example" "registry-ref"))]
-                   (mapv stringify-example
+                   (mapv process-example
                      (get-in @registry-ref [ns-sym var-sym])))
                  (catch Exception _))}))
 

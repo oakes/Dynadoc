@@ -16,16 +16,14 @@
      (when @expanded?
        @content)]))
 
-(defn examples->html [hide-instarepl? examples]
-  (mapv (fn [{:keys [doc def]}]
-          [:div {:class "section"}
-           [:div {:class "section doc"} doc]
-           [:div {:class "paren-soup"}
-            (when-not hide-instarepl?
-              [:div {:class "instarepl" :style {:display "list-item"}}])
-            [:div {:class "content edit"
-                   :dangerouslySetInnerHTML {:__html (hs/code->html def)}}]]])
-    examples))
+(defn example->html [hide-instarepl? {:keys [doc body-str]}]
+  [:div {:class "section"}
+   [:div {:class "section doc"} doc]
+   [:div {:class "paren-soup"}
+    (when-not hide-instarepl?
+      [:div {:class "instarepl" :style {:display "list-item"}}])
+    [:div {:class "content edit"
+           :dangerouslySetInnerHTML {:__html (hs/code->html body-str)}}]]])
 
 (defn source->html [source]
   [:div {:class "paren-soup"}
@@ -56,9 +54,9 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"]]
-           (examples->html (and (= type :cljs) disable-cljs-instarepl?) examples))
+           (mapv (partial example->html (and (= type :cljs) disable-cljs-instarepl?)) examples))
          (expandable-section "Example" url
-           (delay (into [:div] (examples->html true examples))))))
+           (delay (into [:div] (mapv (partial example->html true) examples))))))
      (when source
        (if var-sym
          [:div {:class "section"}
