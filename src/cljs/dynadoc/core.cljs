@@ -52,17 +52,17 @@
       body)
     form))
 
-(defn add-card [form with-card]
-  (list 'let [with-card nil] form))
+(defn add-card [form with-card id]
+  (list 'let [with-card (list '.getElementById 'js/document id)] form))
 
-(defn transform [{:keys [body with-focus with-card]} form-str]
+(defn transform [{:keys [body id with-focus with-card]} form-str]
   (if (or with-focus with-card)
     (pr-str
       (cond-> (read-string form-str)
               (some? with-focus)
               (add-focus with-focus body)
               (some? with-card)
-              (add-card with-card)))
+              (add-card with-card id)))
     form-str))
 
 (defn cljs-compiler-fn [example forms cb]

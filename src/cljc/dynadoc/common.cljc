@@ -16,9 +16,11 @@
      (when @expanded?
        @content)]))
 
-(defn example->html [hide-instarepl? {:keys [doc body-str]}]
+(defn example->html [hide-instarepl? {:keys [id doc body-str with-card]}]
   [:div {:class "section"}
    [:div {:class "section doc"} doc]
+   (when with-card
+     [:div {:class "card" :id id}])
    [:div {:class "paren-soup"}
     (when-not hide-instarepl?
       [:div {:class "instarepl" :style {:display "list-item"}}])
@@ -54,7 +56,8 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"]]
-           (mapv (partial example->html (and (= type :cljs) disable-cljs-instarepl?)) examples))
+           (mapv (partial example->html (and (= type :cljs) disable-cljs-instarepl?))
+             examples))
          (expandable-section "Example" url
            (delay (into [:div] (mapv (partial example->html true) examples))))))
      (when source

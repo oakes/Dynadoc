@@ -86,7 +86,11 @@
                     examples (case sym
                                defexample [(parse-example args)]
                                defexamples (mapv parse-example args))
-                    examples (mapv process-example examples)]
+                    examples (vec
+                               (for [i (range (count examples))]
+                                 (-> (get examples i)
+                                     process-example
+                                     (assoc :id (str ns-sym "/" var-sym "/" i)))))]
                 (update-in ns->vars [ns-sym var-sym] assoc
                   :examples examples))
               (catch Exception _ ns->vars))
@@ -146,9 +150,13 @@
              (catch Exception _))
      :examples (try
                  (require 'dynadoc.example)
-                 (let [registry-ref (resolve (symbol "dynadoc.example" "registry-ref"))]
-                   (mapv process-example
-                     (get-in @registry-ref [ns-sym var-sym])))
+                 (let [registry-ref (resolve (symbol "dynadoc.example" "registry-ref"))
+                       examples (get-in @registry-ref [ns-sym var-sym])]
+                   (vec
+                     (for [i (range (count examples))]
+                       (-> (get examples i)
+                           process-example
+                           (assoc :id (str ns-sym "/" var-sym "/" i))))))
                  (catch Exception _))}))
 
 (defn get-clj-vars [ns]
