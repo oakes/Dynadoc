@@ -87,7 +87,7 @@
                     examples (mapv stringify-example examples)]
                 (update-in ns->vars [ns-sym var-sym] assoc
                   :examples examples))
-              (catch Exception ns->vars))
+              (catch Exception _ ns->vars))
             :else ns->vars))
         ns->vars))))
 
@@ -101,7 +101,9 @@
           (rest files)
           (try
             (read-cljs-file ns->vars f)
-            (catch Exception ns->vars)))
+            (catch Exception e
+              (.printStackTrace e)
+              ns->vars)))
         (recur (rest files) ns->vars))
       (reduce
         (fn [m [k v]]
