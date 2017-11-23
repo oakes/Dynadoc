@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.repl :as repl]
+            [clojure.walk :as walk]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.file :refer [wrap-file]]
             [ring.middleware.reload :refer [wrap-reload]]
@@ -32,18 +33,12 @@
       arglists)))
 
 (defn process-example [{:keys [body with-focus] :as example}]
-  (cond-> example
-          (some? with-focus)
-          (assoc :instarepl-fn
-            (let [{:keys [binding]} with-focus
-                  [_ binding-val] binding]
-              (list 'fn [binding-val] body)))
-          (some? body)
-          (assoc :body-str
-            (with-out-str
-              (clojure.pprint/pprint
-                (or (:init-expr with-focus)
-                    body))))))
+  (assoc example
+    :body-str
+    (with-out-str
+      (clojure.pprint/pprint
+        (or (:init-expr with-focus)
+            body)))))
 
 (defn read-cljs-file [ns->vars f]
   (let [reader (indexing-push-back-reader (slurp f))]

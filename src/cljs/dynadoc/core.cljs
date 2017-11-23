@@ -4,7 +4,8 @@
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
-            [goog.object :as gobj])
+            [goog.object :as gobj]
+            [clojure.walk :refer [postwalk]])
   (:import goog.net.XhrIo))
 
 (defonce state (atom {}))
@@ -33,9 +34,41 @@
       (.-fileName form) (.-lineNumber form))
     (pr-str form)))
 
-(defn cljs-compiler-fn [forms cb]
+(defn with-focus->binding [with-focus]
+  (let [{:keys [binding]} with-focus
+        [binding-type binding-val] binding]
+    (case binding-type
+      :sym binding-val
+      :map binding-val
+      nil)))
+
+(defn add-focus [form with-focus body]
+  (if-let [binding (with-focus->binding with-focus)]
+    (postwalk
+      (fn [x]
+        (if (= x binding)
+          form
+          x))
+      body)
+    form))
+
+(defn add-card [form with-card]
+  (list 'let [with-card nil] form))
+
+(defn transform [{:keys [body with-focus with-card]} form-str]
+  (if (or with-focus with-card)
+    (pr-str
+      (cond-> (read-string form-str)
+              (some? with-focus)
+              (add-focus with-focus body)
+              (some? with-card)
+              (add-card with-card)))
+    form-str))
+
+(defn cljs-compiler-fn [example forms cb]
   (es/code->results
-    (into [(str "(ns " (:ns-sym @state) ")")] forms)
+    (into [(str "(ns " (:ns-sym @state) ")")]
+      (mapv (partial transform example) forms))
     (fn [results]
       (->> results
            rest ; ignore the result of ns
@@ -45,13 +78,17 @@
                     (cb {:lang :clj :source ""}))}))
 
 (defn init-paren-soup []
-  (doseq [paren-soup (-> js/document (.querySelectorAll ".paren-soup") array-seq)]
-    (when-let [edit (.querySelector paren-soup ".edit")]
-      (set! (.-contentEditable edit) true))
-    (ps/init paren-soup
-      (js->clj {:compiler-fn (if (= :clj (:type @state))
-                               clj-compiler-fn
-                               cljs-compiler-fn)}))))
+  (let [examples (->> @state :vars (mapcat :examples) vec)
+        editors (-> js/document (.querySelectorAll ".paren-soup") array-seq vec)]
+    (dotimes [i (count editors)]
+      (let [paren-soup (get editors i)
+            example (get examples i)]
+        (when-let [edit (.querySelector paren-soup ".edit")]
+          (set! (.-contentEditable edit) true))
+        (ps/init paren-soup
+          (js->clj {:compiler-fn (if (= :clj (:type @state))
+                                   clj-compiler-fn
+                                   (partial cljs-compiler-fn example))}))))))
 
 (defn disable-cljs-instarepl []
   (swap! state assoc :disable-cljs-instarepl? true))

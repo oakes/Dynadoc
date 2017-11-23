@@ -3,6 +3,7 @@
 
 (defexamples dynadoc.core/form->serializable
   [{:doc "Serialize code"
+    :with-card card
     :with-focus [focus (+ a b)]}
    (let [a 1
          b 2]
