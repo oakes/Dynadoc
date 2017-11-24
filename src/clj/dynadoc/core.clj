@@ -150,7 +150,7 @@
              (catch Exception _))
      :examples (try
                  (require 'dynadoc.example)
-                 (let [registry-ref (resolve (symbol "dynadoc.example" "registry-ref"))
+                 (let [registry-ref (var-get (resolve (symbol "dynadoc.example" "registry-ref")))
                        examples (get-in @registry-ref [ns-sym var-sym])]
                    (vec
                      (for [i (range (count examples))]

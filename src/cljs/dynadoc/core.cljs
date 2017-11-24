@@ -10,37 +10,11 @@
 
 (defonce state (atom {}))
 
-(defn clj-compiler-fn [forms cb]
-  (try
-    (.send XhrIo
-      "/eval"
-      (fn [e]
-        (if (.isSuccess (.-target e))
-          (->> (.. e -target getResponseText)
-               read-string
-               rest ; ignore the result of in-ns
-               (mapv #(if (vector? %) (into-array %) %))
-               cb)
-          (cb [])))
-      "POST"
-      (pr-str (into [(str "(in-ns '" (:ns-sym @state) ")")] forms)))
-    (catch js/Error _ (cb []))))
-
-(defn form->serializable
-  "Converts the input to either a string or (if an error object) an array of data"
-  [form]
-  (if (instance? js/Error form)
-    (array (or (some-> form .-cause .-message) (.-message form))
-      (.-fileName form) (.-lineNumber form))
-    (pr-str form)))
-
 (defn with-focus->binding [with-focus]
   (let [{:keys [binding]} with-focus
         [binding-type binding-val] binding]
-    (case binding-type
-      :sym binding-val
-      :map binding-val
-      nil)))
+    (when (= :sym binding-type)
+      binding-val)))
 
 (defn add-focus [form with-focus body]
   (if-let [binding (with-focus->binding with-focus)]
@@ -65,6 +39,31 @@
               (add-card with-card id)))
     form-str))
 
+(defn clj-compiler-fn [example forms cb]
+  (try
+    (.send XhrIo
+      "/eval"
+      (fn [e]
+        (if (.isSuccess (.-target e))
+          (->> (.. e -target getResponseText)
+               read-string
+               rest ; ignore the result of in-ns
+               (mapv #(if (vector? %) (into-array %) %))
+               cb)
+          (cb [])))
+      "POST"
+      (pr-str (into [(str "(in-ns '" (:ns-sym @state) ")")]
+                (mapv (partial transform (dissoc example :with-card)) forms))))
+    (catch js/Error _ (cb []))))
+
+(defn form->serializable
+  "Converts the input to either a string or (if an error object) an array of data"
+  [form]
+  (if (instance? js/Error form)
+    (array (or (some-> form .-cause .-message) (.-message form))
+      (.-fileName form) (.-lineNumber form))
+    (pr-str form)))
+
 (defn cljs-compiler-fn [example forms cb]
   (es/code->results
     (into [(str "(ns " (:ns-sym @state) ")")]
@@ -87,7 +86,7 @@
           (set! (.-contentEditable edit) true))
         (ps/init paren-soup
           (js->clj {:compiler-fn (if (= :clj (:type @state))
-                                   clj-compiler-fn
+                                   (partial clj-compiler-fn example)
                                    (partial cljs-compiler-fn example))}))))))
 
 (defn disable-cljs-instarepl []
