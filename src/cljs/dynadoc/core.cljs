@@ -92,9 +92,6 @@
     (ps/init paren-soup
       (js->clj {:compiler-fn (fn [])}))))
 
-(defn dev []
-  (swap! *state assoc :dev? true))
-
 (defn prod []
   (swap! *state assoc :prod? true))
 

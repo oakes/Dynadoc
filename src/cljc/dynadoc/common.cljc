@@ -157,14 +157,17 @@
                              :on-change #(->> % .-target .-value
                                               (swap! *state assoc :export-filter))}]]])]]))
 
-(defn export [{:keys [cljs-started? dev? prod?] :as state} *state]
-  (when (and cljs-started? (or dev? prod?))
-    [:div {:class "export"}
-     (expandable-section
-       {:label "Export"
-        :url ""
-        :*content (delay (export-form state *state))
-        :on-close #(swap! *state dissoc :export-filter)})]))
+(defn export [{:keys [cljs-started? static?] :as state} *state]
+  (when-not static?
+    [:div {:style {:min-height 75}}
+     (when cljs-started?
+       [:div {:class "export"}
+        (expandable-section
+          {:label "Export"
+           :url ""
+           :*content (delay (export-form state *state))
+           :on-close #(swap! *state dissoc :export-filter)})])
+     [:div {:style {:clear "right"}}]]))
 
 (rum/defc app < rum/reactive [*state]
   (let [{:keys [ns-sym ns-meta var-sym vars] :as state} (rum/react *state)]
@@ -174,7 +177,6 @@
        (if ns-sym
          (into [:div {:class "vars"}
                 (export state *state)
-                [:div {:style {:clear "right"}}]
                 (when-not var-sym
                   [:div
                    [:center [:h1 (str ns-sym)]]
