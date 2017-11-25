@@ -78,16 +78,19 @@
 
 (defn init-paren-soup []
   (let [examples (->> @state :vars (mapcat :examples) vec)
-        editors (-> js/document (.querySelectorAll ".paren-soup") array-seq vec)]
+        editors (-> js/document (.querySelectorAll ".example") array-seq vec)]
     (dotimes [i (count editors)]
       (let [paren-soup (get editors i)
             example (get examples i)]
-        (when-let [edit (.querySelector paren-soup ".edit")]
-          (set! (.-contentEditable edit) true))
+        (when-let [content (.querySelector paren-soup ".content")]
+          (set! (.-contentEditable content) true))
         (ps/init paren-soup
           (js->clj {:compiler-fn (if (= :clj (:type @state))
                                    (partial clj-compiler-fn example)
-                                   (partial cljs-compiler-fn example))}))))))
+                                   (partial cljs-compiler-fn example))})))))
+  (doseq [paren-soup (-> js/document (.querySelectorAll ".nonedit") array-seq vec)]
+    (ps/init paren-soup
+      (js->clj {:compiler-fn (fn [])}))))
 
 (defn disable-cljs-instarepl []
   (swap! state assoc :disable-cljs-instarepl? true))

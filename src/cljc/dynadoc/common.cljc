@@ -21,14 +21,14 @@
    [:div {:class "section doc"} doc]
    (when with-card
      [:div {:class "card" :id id}])
-   [:div {:class "paren-soup"}
+   [:div {:class "paren-soup example"}
     (when-not hide-instarepl?
       [:div {:class "instarepl" :style {:display "list-item"}}])
-    [:div {:class "content edit"
+    [:div {:class "content"
            :dangerouslySetInnerHTML {:__html (hs/code->html body-str)}}]]])
 
 (defn source->html [source]
-  [:div {:class "paren-soup"}
+  [:div {:class "paren-soup nonedit"}
    [:div {:class "content"
           :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
 
@@ -47,7 +47,7 @@
      (when spec
        [:div {:class "section"}
         [:h2 "Spec"]
-        [:div {:class "paren-soup"}
+        [:div {:class "paren-soup nonedit"}
          [:div {:class "content"}
           (str spec)]]])
      (when doc
