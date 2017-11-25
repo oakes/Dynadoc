@@ -52,6 +52,14 @@
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
+(defn spec->html [spec]
+  (when-let [html (try
+                    (hs/code->html spec)
+                    (catch #?(:clj Exception :cljs js/Error) _))]
+    [:div {:class "paren-soup nonedit"}
+     [:div {:class "content"
+            :dangerouslySetInnerHTML {:__html html}}]]))
+
 (defn var->html [{:keys [ns-sym var-sym type prod? rel-path static?] :as state}
                  {:keys [sym meta source spec examples]}]
   (let [{:keys [arglists doc]} meta
@@ -66,11 +74,14 @@
            arglists)
          [[:h2 (str sym)]]))
      (when spec
-       [:div {:class "section"}
-        [:h2 "Spec"]
-        [:div {:class "paren-soup nonedit"}
-         [:div {:class "content"}
-          (str spec)]]])
+       (if var-sym
+         [:div {:class "section"}
+          [:h2 "Spec"]
+          (spec->html spec)]
+         (expandable-section
+           {:label "Spec"
+            :url url
+            :*content (delay (spec->html spec))})))
      (when doc
        [:div {:class "section doc"} doc])
      (when (seq examples)
