@@ -5,13 +5,16 @@
 
 (def meta-keys [:file :arglists :doc])
 
-(defn ns-sym->url [type ns-sym]
-  (str "/" (name type) "/" ns-sym))
+(defn ns-sym->url [rel-path static? type ns-sym]
+  (str rel-path (name type) "/" ns-sym (when static? ".html")))
 
-(defn var-sym->url [type ns-sym var-sym]
-  (str "/" (name type) "/" ns-sym "/"
-    #?(:cljs (js/escape (str var-sym))
-       :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8"))))
+(defn var-sym->url [rel-path static? type ns-sym var-sym]
+  (str rel-path (name type) "/" ns-sym "/"
+    (if static?
+      (str/replace (str var-sym) "?" "_q")
+      #?(:cljs (js/escape (str var-sym))
+         :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8")))
+    (when static? ".html")))
 
 (rum/defcs expandable-section < (rum/local false ::expanded?)
   [rum-state {:keys [label url *content on-close]}]
@@ -28,25 +31,31 @@
        @*content)]))
 
 (defn example->html [hide-instarepl? {:keys [id doc body-str with-card]}]
-  [:div {:class "section"}
-   [:div {:class "section doc"} doc]
-   (when with-card
-     [:div {:class "card" :id id}])
-   [:div {:class "paren-soup example"}
-    (when-not hide-instarepl?
-      [:div {:class "instarepl" :style {:display "list-item"}}])
-    [:div {:class "content"
-           :dangerouslySetInnerHTML {:__html (hs/code->html body-str)}}]]])
+  (when-let [html (try
+                    (hs/code->html body-str)
+                    (catch #?(:clj Exception :cljs js/Error) _))]
+    [:div {:class "section"}
+     [:div {:class "section doc"} doc]
+     (when with-card
+       [:div {:class "card" :id id}])
+     [:div {:class "paren-soup example"}
+      (when-not hide-instarepl?
+        [:div {:class "instarepl" :style {:display "list-item"}}])
+      [:div {:class "content"
+             :dangerouslySetInnerHTML {:__html html}}]]]))
 
 (defn source->html [source]
-  [:div {:class "paren-soup nonedit"}
-   [:div {:class "content"
-          :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
+  (when-let [html (try
+                    (hs/code->html source)
+                    (catch #?(:clj Exception :cljs js/Error) _))]
+    [:div {:class "paren-soup nonedit"}
+     [:div {:class "content"
+            :dangerouslySetInnerHTML {:__html html}}]]))
 
-(defn var->html [{:keys [ns-sym var-sym type prod?] :as state}
+(defn var->html [{:keys [ns-sym var-sym type prod? rel-path static?] :as state}
                  {:keys [sym meta source spec examples]}]
   (let [{:keys [arglists doc]} meta
-        url (var-sym->url type ns-sym sym)]
+        url (var-sym->url rel-path static? type ns-sym sym)]
     [:div
      (into (if var-sym
              [:div]
@@ -85,7 +94,7 @@
             :*content (delay (source->html source))})))]))
 
 (rum/defcs sidebar  < (rum/local "" ::search)
-  [rum-state {:keys [nses cljs-started? export-filter]}]
+  [rum-state {:keys [nses cljs-started? export-filter rel-path static?]}]
   (let [*search (::search rum-state)
         search (or export-filter @*search)
         search (when (seq search)
@@ -104,7 +113,7 @@
                                  (filter #(re-find search (str %)))
                                  (mapv (fn [var-sym]
                                          [:div {:class "var"}
-                                          [:a {:href (var-sym->url type sym var-sym)}
+                                          [:a {:href (var-sym->url rel-path static? type sym var-sym)}
                                            (str var-sym)]]))))]
                  (when (or (nil? search)
                            (re-find search (str sym))
@@ -112,18 +121,19 @@
                    [:div
                     (when (= type :cljs)
                       [:div {:class "tag"} "CLJS"])
-                    [:a {:href (ns-sym->url type sym)}
+                    [:a {:href (ns-sym->url rel-path static? type sym)}
                      (str sym)]
                     (when (seq vars)
                       (into [:div] vars))])))
          nses))]))
 
 (rum/defcs export-form < (rum/local {} ::options)
-  [rum-state {:keys [ns-sym var-sym]} *state]
+  [rum-state {:keys [type ns-sym var-sym export-filter]} *state]
   (let [*options (::options rum-state)
         {:keys [pages]
          :or {pages (if ns-sym :single :multiple)}} @*options]
-    [:form {:on-submit (fn [e])
+    [:form {:action "/dynadoc-export.zip"
+            :method :get
             :style {:text-align "left"}}
      [:div
       [:label
@@ -155,7 +165,17 @@
                              :style {:margin 5
                                      :font-size 14}
                              :on-change #(->> % .-target .-value
-                                              (swap! *state assoc :export-filter))}]]])]]))
+                                              (swap! *state assoc :export-filter))}]]])]
+     [:input {:type "hidden" :name "export-filter" :value export-filter}]
+     (when type
+       [:input {:type "hidden" :name "type" :value (name type)}])
+     (when ns-sym
+       [:input {:type "hidden" :name "ns-sym" :value (str ns-sym)}])
+     (when var-sym
+       [:input {:type "hidden" :name "var-sym" :value (str var-sym)}])
+     [:div {:style {:text-align "center"}}
+      [:button {:type "submit"}
+       "Download zip file"]]]))
 
 (defn export [{:keys [cljs-started? static?] :as state} *state]
   (when-not static?
@@ -170,12 +190,15 @@
      [:div {:style {:clear "right"}}]]))
 
 (rum/defc app < rum/reactive [*state]
-  (let [{:keys [ns-sym ns-meta var-sym vars static?] :as state} (rum/react *state)]
+  (let [{:keys [ns-sym ns-meta var-sym vars static? hide-sidebar?]
+         :as state} (rum/react *state)]
     [:div
-     (sidebar state)
+     (when-not hide-sidebar?
+       (sidebar state))
      (conj
        (if ns-sym
-         (into [:div {:class "vars"}
+         (into [:div {:class "vars"
+                      :style {:left (if hide-sidebar? 0 300)}}
                 (export state *state)
                 (when-not var-sym
                   [:div
