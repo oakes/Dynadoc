@@ -1,20 +1,29 @@
 (ns dynadoc.common
   (:require [rum.core :as rum]
-            [html-soup.core :as hs]))
+            [html-soup.core :as hs]
+            [clojure.string :as str]))
 
 (def meta-keys [:file :arglists :doc])
 
+(defn ns-sym->url [type ns-sym]
+  (str "/" (name type) "/" ns-sym))
+
+(defn var-sym->url [type ns-sym var-sym]
+  (str "/" (name type) "/" ns-sym "/"
+    #?(:cljs (js/escape (str var-sym))
+       :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8"))))
+
 (rum/defcs expandable-section < (rum/local false ::expanded?)
-  [state label url content]
-  (let [expanded? (::expanded? state)]
+  [state label url *content]
+  (let [*expanded? (::expanded? state)]
     [:div {:class "section"}
      [:a {:href url
           #?@(:cljs [:on-click (fn [e]
                                  (.preventDefault e)
-                                 (swap! expanded? not))])}
-      [:h3 (str (if @expanded? "- " "+ ") label)]]
-     (when @expanded?
-       @content)]))
+                                 (swap! *expanded? not))])}
+      [:h3 (str (if @*expanded? "- " "+ ") label)]]
+     (when @*expanded?
+       @*content)]))
 
 (defn example->html [hide-instarepl? {:keys [id doc body-str with-card]}]
   [:div {:class "section"}
@@ -32,9 +41,10 @@
    [:div {:class "content"
           :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
 
-(defn var->html [{:keys [var-sym type disable-cljs-instarepl?] :as state}
-                 {:keys [sym url meta source spec examples]}]
-  (let [{:keys [arglists doc]} meta]
+(defn var->html [{:keys [ns-sym var-sym type disable-cljs-instarepl?] :as state}
+                 {:keys [sym meta source spec examples]}]
+  (let [{:keys [arglists doc]} meta
+        url (var-sym->url type ns-sym sym)]
     [:div
      (into (if var-sym
              [:div]
@@ -67,17 +77,40 @@
           (source->html source)]
          (expandable-section "Source" url (delay (source->html source)))))]))
 
-(rum/defc app < rum/reactive [state]
-  (let [{:keys [nses ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
+(rum/defcs sidebar  < (rum/local "" ::search)
+  [state {:keys [nses cljs-started?]}]
+  (let [*search (::search state)
+        search @*search]
     [:div
+     (when cljs-started?
+       [:input {:class "search"
+                :on-change #(->> % .-target .-value (reset! *search))
+                :placeholder "Search"}])
      (into [:div {:class "nses"}]
-       (mapv (fn [{:keys [sym type url]}]
-               [:div
-                (when (= type :cljs)
-                  [:div {:class "tag"} "CLJS"])
-                [:a {:href url}
-                 (str sym)]])
-         nses))
+       (keep (fn [{:keys [sym type var-syms]}]
+               (let [vars (when (seq search)
+                            (->> var-syms
+                                 (filter #(str/index-of (str %) search))
+                                 (mapv (fn [var-sym]
+                                         [:div {:class "var"}
+                                          [:a {:href (var-sym->url type sym var-sym)}
+                                           (str var-sym)]]))))]
+                 (when (or (empty? search)
+                           (str/index-of (str sym) search)
+                           (seq vars))
+                   [:div
+                    (when (= type :cljs)
+                      [:div {:class "tag"} "CLJS"])
+                    [:a {:href (ns-sym->url type sym)}
+                     (str sym)]
+                    (when (seq vars)
+                      (into [:div] vars))])))
+         nses))]))
+
+(rum/defc app < rum/reactive [state]
+  (let [{:keys [ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
+    [:div
+     (sidebar state)
      (if ns-sym
        (into [:div {:class "vars"}
               (when-not var-sym

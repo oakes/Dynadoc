@@ -15,7 +15,7 @@ html, body, .paren-soup {
     position: fixed;
     width: 300px;
     left: 0px;
-    top: 0px;
+    top: 50px;
     bottom: 0px;
     margin: 5px;
     overflow: auto;
@@ -27,7 +27,7 @@ html, body, .paren-soup {
     left: 300px;
     right: 0px;
     bottom: 0px;
-    margin: 5px;
+    margin: 10px;
     padding: 5px;
     overflow: auto;
 }
@@ -42,4 +42,16 @@ html, body, .paren-soup {
     margin-right: 5px;
     border-radius: 5px;
     background-color: lightgreen;
+}
+.search {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 300px;
+    height: 40px;
+    margin: 5px;
+    font-size: 30px;
+}
+.var {
+    margin-left: 30px;
 }

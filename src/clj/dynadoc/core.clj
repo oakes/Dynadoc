@@ -67,9 +67,7 @@
                          (select-keys (meta sym) common/meta-keys))
                  :source (with-out-str
                            (clojure.pprint/pprint
-                             form))
-                 :url (str "/cljs/" current-ns "/"
-                        (java.net.URLEncoder/encode (str sym) "UTF-8"))}))
+                             form))}))
             (and current-ns
                  (list? form)
                  (symbol? (first form))
@@ -121,7 +119,6 @@
   (map #(hash-map
           :sym %
           :type :cljs
-          :url (str "/cljs/" %)
           :var-syms (mapv :sym (get cljs-nses-and-vars %)))
     (keys cljs-nses-and-vars)))
 
@@ -134,15 +131,12 @@
   (map #(hash-map
           :sym (ns-name %)
           :type :clj
-          :url (str "/clj/" %)
           :var-syms (vec (keys (ns-publics %))))
     (all-ns)))
 
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
     {:sym var-sym
-     :url (str "/clj/" ns-sym "/"
-            (java.net.URLEncoder/encode (str var-sym) "UTF-8"))
      :meta (-> sym
                find-var
                meta

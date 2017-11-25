@@ -102,6 +102,7 @@
         read-string))
   (rum/mount (common/app state)
     (.querySelector js/document "#app"))
+  (swap! state assoc :cljs-started? true)
   (when (:var-sym @state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block")))
