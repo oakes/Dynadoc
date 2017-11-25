@@ -14,13 +14,15 @@
        :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8"))))
 
 (rum/defcs expandable-section < (rum/local false ::expanded?)
-  [state label url *content]
-  (let [*expanded? (::expanded? state)]
+  [rum-state {:keys [label url *content on-close]}]
+  (let [*expanded? (::expanded? rum-state)]
     [:div {:class "section"}
      [:a {:href url
           #?@(:cljs [:on-click (fn [e]
                                  (.preventDefault e)
-                                 (swap! *expanded? not))])}
+                                 (when-not (swap! *expanded? not)
+                                   (when on-close
+                                     (on-close))))])}
       [:h3 (str (if @*expanded? "- " "+ ") label)]]
      (when @*expanded?
        @*content)]))
@@ -41,7 +43,7 @@
    [:div {:class "content"
           :dangerouslySetInnerHTML {:__html (hs/code->html source)}}]])
 
-(defn var->html [{:keys [ns-sym var-sym type disable-cljs-instarepl?] :as state}
+(defn var->html [{:keys [ns-sym var-sym type prod?] :as state}
                  {:keys [sym meta source spec examples]}]
   (let [{:keys [arglists doc]} meta
         url (var-sym->url type ns-sym sym)]
@@ -66,37 +68,46 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"]]
-           (mapv (partial example->html (and (= type :cljs) disable-cljs-instarepl?))
+           (mapv (partial example->html (and (= type :cljs) prod?))
              examples))
-         (expandable-section "Example" url
-           (delay (into [:div] (mapv (partial example->html true) examples))))))
+         (expandable-section
+           {:label "Example"
+            :url url
+            :*content (delay (into [:div] (mapv (partial example->html true) examples)))})))
      (when source
        (if var-sym
          [:div {:class "section"}
           [:h2 "Source"]
           (source->html source)]
-         (expandable-section "Source" url (delay (source->html source)))))]))
+         (expandable-section
+           {:label "Source"
+            :url url
+            :*content (delay (source->html source))})))]))
 
 (rum/defcs sidebar  < (rum/local "" ::search)
-  [state {:keys [nses cljs-started?]}]
-  (let [*search (::search state)
-        search @*search]
+  [rum-state {:keys [nses cljs-started? export-filter]}]
+  (let [*search (::search rum-state)
+        search (or export-filter @*search)
+        search (when (seq search)
+                 (re-pattern search))]
     [:div
      (when cljs-started?
        [:input {:class "search"
                 :on-change #(->> % .-target .-value (reset! *search))
                 :placeholder "Search"}])
-     (into [:div {:class "nses"}]
+     (into [:div {:class "nses"}
+            (when export-filter
+              [:i "Pages to export:"])]
        (keep (fn [{:keys [sym type var-syms]}]
-               (let [vars (when (seq search)
+               (let [vars (when (and search (empty? export-filter))
                             (->> var-syms
-                                 (filter #(str/index-of (str %) search))
+                                 (filter #(re-find search (str %)))
                                  (mapv (fn [var-sym]
                                          [:div {:class "var"}
                                           [:a {:href (var-sym->url type sym var-sym)}
                                            (str var-sym)]]))))]
-                 (when (or (empty? search)
-                           (str/index-of (str sym) search)
+                 (when (or (nil? search)
+                           (re-find search (str sym))
                            (seq vars))
                    [:div
                     (when (= type :cljs)
@@ -107,6 +118,54 @@
                       (into [:div] vars))])))
          nses))]))
 
+(rum/defcs export-form < (rum/local {} ::options)
+  [rum-state {:keys [ns-sym var-sym]} *state]
+  (let [*options (::options rum-state)
+        {:keys [pages]
+         :or {pages (if ns-sym :single :multiple)}} @*options]
+    [:form {:on-submit (fn [e])
+            :style {:text-align "left"}}
+     [:div
+      [:label
+       [:input {:type "radio" :name "pages" :value "single" :checked (= pages :single)
+                :on-click #(swap! *options assoc :pages :single)
+                :disabled (nil? ns-sym)}]
+       "Only this page"]]
+     [:div
+      [:label
+       [:input {:type "radio" :name "pages" :value "multiple" :checked (= pages :multiple)
+                :on-click #(swap! *options assoc :pages :multiple)}]
+       "Multiple pages"]]
+     [:div {:style {:margin 10
+                    :font-size 14}}
+      (case pages
+        :single [:i
+                 "Only the current page will be exported"
+                 [:br]
+                 "and the sidebar will be hidden."]
+        :multiple [:i
+                   "All the namespaces in the sidebar"
+                   [:br]
+                   "will be exported. You can narrow them"
+                   [:br]
+                   "down with the following regex:"
+                   [:div
+                    [:input {:type "text"
+                             :placeholder "Export filter"
+                             :style {:margin 5
+                                     :font-size 14}
+                             :on-change #(->> % .-target .-value
+                                              (swap! *state assoc :export-filter))}]]])]]))
+
+(defn export [{:keys [cljs-started? dev? prod?] :as state} *state]
+  (when (and cljs-started? (or dev? prod?))
+    [:div {:class "export"}
+     (expandable-section
+       {:label "Export"
+        :url ""
+        :*content (delay (export-form state *state))
+        :on-close #(swap! *state dissoc :export-filter)})]))
+
 (rum/defc app < rum/reactive [*state]
   (let [{:keys [ns-sym ns-meta var-sym vars] :as state} (rum/react *state)]
     [:div
@@ -114,13 +173,16 @@
      (conj
        (if ns-sym
          (into [:div {:class "vars"}
+                (export state *state)
+                [:div {:style {:clear "right"}}]
                 (when-not var-sym
                   [:div
                    [:center [:h1 (str ns-sym)]]
                    (when-let [doc (:doc ns-meta)]
                      [:div {:class "section doc"} doc])])]
            (mapv (partial var->html state) vars))
-         [:div {:class "vars"}])
+         [:div {:class "vars"}
+          (export state *state)])
        [:div {:class "footer"}
         "Generated by "
         [:a {:href "https://github.com/oakes/Dynadoc"

@@ -92,8 +92,11 @@
     (ps/init paren-soup
       (js->clj {:compiler-fn (fn [])}))))
 
-(defn disable-cljs-instarepl []
-  (swap! *state assoc :disable-cljs-instarepl? true))
+(defn dev []
+  (swap! *state assoc :dev? true))
+
+(defn prod []
+  (swap! *state assoc :prod? true))
 
 (defn init []
   (reset! *state
