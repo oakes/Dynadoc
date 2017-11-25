@@ -117,19 +117,26 @@
         {}
         ns->vars))))
 
-(defn get-clj-nses []
-  (map #(hash-map
-          :sym (ns-name %)
-          :type :clj
-          :url (str "/clj/" %))
-    (all-ns)))
-
 (defn get-cljs-nses [cljs-nses-and-vars]
   (map #(hash-map
           :sym %
           :type :cljs
-          :url (str "/cljs/" %))
+          :url (str "/cljs/" %)
+          :var-syms (mapv :sym (get cljs-nses-and-vars %)))
     (keys cljs-nses-and-vars)))
+
+(defn get-cljs-vars [cljs-nses-and-vars ns]
+  (->> (get cljs-nses-and-vars ns)
+       (sort-by :sym)
+       vec))
+
+(defn get-clj-nses []
+  (map #(hash-map
+          :sym (ns-name %)
+          :type :clj
+          :url (str "/clj/" %)
+          :var-syms (vec (keys (ns-publics %))))
+    (all-ns)))
 
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
@@ -140,7 +147,8 @@
                find-var
                meta
                (select-keys common/meta-keys))
-     :source (repl/source-fn sym)
+     :source (try (repl/source-fn sym)
+               (catch Exception _))
      :spec (try
              (require 'clojure.spec.alpha)
              (let [form (resolve (symbol "clojure.spec.alpha" "form"))]
@@ -163,11 +171,6 @@
   (->> (ns-publics ns)
        keys
        (mapv (partial get-clj-var-info ns))
-       (sort-by :sym)
-       vec))
-
-(defn get-cljs-vars [cljs-nses-and-vars ns]
-  (->> (get cljs-nses-and-vars ns)
        (sort-by :sym)
        vec))
 
