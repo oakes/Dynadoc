@@ -96,7 +96,7 @@
                 :on-change #(->> % .-target .-value (reset! *search))
                 :placeholder "Search"}])
      (into [:div {:class "nses"}
-            (when export-filter
+            (when (seq export-filter)
               [:i "Pages to export:"])]
        (keep (fn [{:keys [sym type var-syms]}]
                (let [vars (when (and search (empty? export-filter))
