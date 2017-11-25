@@ -5,8 +5,8 @@
                   [org.clojure/test.check "0.9.0" :scope "test"]
                   ; cljs deps
                   [org.clojure/clojurescript "1.9.946" :scope "test"]
-                  [paren-soup "2.9.1" :scope "test"]
-                  [mistakes-were-made "1.7.3" :scope "test"]
+                  [paren-soup "2.9.1"]
+                  [mistakes-were-made "1.7.3"]
                   ; clj deps
                   [org.clojure/clojure "1.8.0" :scope "provided"]
                   [nightlight "1.9.3" :scope "test"]
