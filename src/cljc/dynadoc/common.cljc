@@ -107,8 +107,8 @@
                       (into [:div] vars))])))
          nses))]))
 
-(rum/defc app < rum/reactive [state]
-  (let [{:keys [ns-sym ns-meta var-sym vars] :as state} (rum/react state)]
+(rum/defc app < rum/reactive [*state]
+  (let [{:keys [ns-sym ns-meta var-sym vars] :as state} (rum/react *state)]
     [:div
      (sidebar state)
      (if ns-sym

@@ -16,8 +16,8 @@
             [clojure.tools.reader :as r]
             [clojure.tools.reader.reader-types :refer [indexing-push-back-reader]]))
 
-(defonce web-server (atom nil))
-(defonce options (atom nil))
+(defonce *web-server (atom nil))
+(defonce *options (atom nil))
 
 (defn get-cljs-arglists [args]
   (loop [args args
@@ -235,15 +235,15 @@
   ([opts]
    (start (wrap-resource handler "dynadoc-public") opts))
   ([app opts]
-   (when-not @web-server
+   (when-not @*web-server
      (->> (merge {:port 0} opts)
-          (reset! options)
+          (reset! *options)
           (run-server app)
-          (reset! web-server)
+          (reset! *web-server)
           print-server))))
 
 (defn dev-start [opts]
-  (when-not @web-server
+  (when-not @*web-server
     (.mkdirs (io/file "target" "dynadoc-public"))
     (start (-> #'handler
                (wrap-reload)

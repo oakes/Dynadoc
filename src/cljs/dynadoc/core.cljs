@@ -8,7 +8,7 @@
             [clojure.walk :refer [postwalk]])
   (:import goog.net.XhrIo))
 
-(defonce state (atom {}))
+(defonce *state (atom {}))
 
 (defn with-focus->binding [with-focus]
   (let [{:keys [binding]} with-focus
@@ -52,7 +52,7 @@
                cb)
           (cb [])))
       "POST"
-      (pr-str (into [(str "(in-ns '" (:ns-sym @state) ")")]
+      (pr-str (into [(str "(in-ns '" (:ns-sym @*state) ")")]
                 (mapv (partial transform (dissoc example :with-card)) forms))))
     (catch js/Error _ (cb []))))
 
@@ -66,7 +66,7 @@
 
 (defn cljs-compiler-fn [example forms cb]
   (es/code->results
-    (into [(str "(ns " (:ns-sym @state) ")")]
+    (into [(str "(ns " (:ns-sym @*state) ")")]
       (mapv (partial transform example) forms))
     (fn [results]
       (->> results
@@ -77,7 +77,7 @@
                     (cb {:lang :clj :source ""}))}))
 
 (defn init-paren-soup []
-  (let [examples (->> @state :vars (mapcat :examples) vec)
+  (let [examples (->> @*state :vars (mapcat :examples) vec)
         editors (-> js/document (.querySelectorAll ".example") array-seq vec)]
     (dotimes [i (count editors)]
       (let [paren-soup (get editors i)
@@ -85,7 +85,7 @@
         (when-let [content (.querySelector paren-soup ".content")]
           (set! (.-contentEditable content) true))
         (ps/init paren-soup
-          (js->clj {:compiler-fn (if (= :clj (:type @state))
+          (js->clj {:compiler-fn (if (= :clj (:type @*state))
                                    (partial clj-compiler-fn example)
                                    (partial cljs-compiler-fn example))})))))
   (doseq [paren-soup (-> js/document (.querySelectorAll ".nonedit") array-seq vec)]
@@ -93,17 +93,17 @@
       (js->clj {:compiler-fn (fn [])}))))
 
 (defn disable-cljs-instarepl []
-  (swap! state assoc :disable-cljs-instarepl? true))
+  (swap! *state assoc :disable-cljs-instarepl? true))
 
 (defn init []
-  (reset! state
+  (reset! *state
     (-> (.querySelector js/document "#initial-state")
         .-textContent
         read-string))
-  (rum/mount (common/app state)
+  (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
-  (swap! state assoc :cljs-started? true)
-  (when (:var-sym @state)
+  (swap! *state assoc :cljs-started? true)
+  (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block")))
   (init-paren-soup))
