@@ -2,13 +2,16 @@
   (:require [cljs.reader :refer [read-string]]
             [rum.core :as rum]
             [dynadoc.common :as common]
+            [dynadoc.state :refer [*state]]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj]
-            [clojure.walk :refer [postwalk]])
+            [clojure.walk :refer [postwalk]]
+            [goog.object :as gobj])
   (:import goog.net.XhrIo))
 
-(defonce *state (atom {}))
+(def ^:const version "1.0.0")
+(def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
 
 (defn with-focus->binding [with-focus]
   (let [{:keys [binding]} with-focus
@@ -95,13 +98,28 @@
 (defn prod []
   (swap! *state assoc :prod? true))
 
+(defn check-version []
+  (.send XhrIo
+    api-url
+    (fn [e]
+      (when (and (.isSuccess (.-target e))
+                 (->> (.. e -target getResponseText)
+                      (.parse js/JSON)
+                      (#(gobj/get % "latest_release"))
+                      (not= version)))
+        (swap! *state assoc :update? true)))
+    "GET"))
+
 (defn init []
-  (reset! *state
+  (swap! *state merge
     (-> (.querySelector js/document "#initial-state")
         .-textContent
         read-string))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
+  (let [{:keys [static? dev?]} @*state]
+    (when (and (not static?) (not dev?))
+      (check-version)))
   (swap! *state assoc :cljs-started? true)
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
