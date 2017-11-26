@@ -159,8 +159,7 @@
        [:input {:type "radio" :name "pages" :value "multiple" :checked (= pages :multiple)
                 :on-click #(swap! *options assoc :pages :multiple)}]
        "Multiple pages"]]
-     [:div {:style {:margin 10
-                    :font-size 14}}
+     [:div {:style {:margin 10 :font-size 14}}
       (case pages
         :single [:i
                  "Only the current page will be exported"
@@ -175,8 +174,7 @@
                    [:div
                     [:input {:type "text"
                              :placeholder "Export filter"
-                             :style {:margin 5
-                                     :font-size 14}
+                             :style {:margin 5 :font-size 14}
                              :on-change #(->> % .-target .-value
                                               (swap! *state assoc :export-filter))}]]])]
      [:input {:type "hidden" :name "export-filter" :value export-filter}]

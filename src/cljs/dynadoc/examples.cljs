@@ -1,5 +1,5 @@
 (ns dynadoc.examples
-  (:require-macros [dynadoc.example :refer [defexample]]))
+  (:require-macros [dynadoc.example :refer [defexamples]]))
 
 (defexamples dynadoc.core/form->serializable
   [{:doc "Serialize code"
@@ -10,4 +10,3 @@
      focus)]
   ["Serialize an error"
    (form->serializable (js/Error. "This is an error!"))])
-
