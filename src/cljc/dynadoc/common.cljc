@@ -85,17 +85,12 @@
      (when doc
        [:div {:class "section doc"} doc])
      (when (seq examples)
-       (if var-sym
-         (into [:div {:class "section"}
+       (into [:div {:class "section"}
                 [:h2 "Example"]]
            (mapv (partial example->html
                    (or (and (= type :cljs) prod?)
                        (and (= type :clj) static?)))
-             examples))
-         (expandable-section
-           {:label "Example"
-            :url url
-            :*content (delay (into [:div] (mapv (partial example->html true) examples)))})))
+             examples)))
      (when source
        (if var-sym
          [:div {:class "section"}
