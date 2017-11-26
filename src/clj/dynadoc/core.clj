@@ -109,8 +109,9 @@
                                  (-> (get examples i)
                                      process-example
                                      (assoc :id (str ns-sym "/" var-sym "/" i)))))]
-                (update-in ns->vars [ns-sym var-sym] assoc
-                  :examples examples))
+                (update-in ns->vars [ns-sym var-sym] merge
+                  {:sym var-sym
+                   :examples examples}))
               (catch Exception _ ns->vars))
             :else ns->vars))
         ns->vars))))
@@ -144,7 +145,7 @@
 
 (defn get-cljs-vars [cljs-nses-and-vars ns]
   (->> (get cljs-nses-and-vars ns)
-       (sort-by :sym)
+       (sort-by #(-> % :sym str))
        vec))
 
 (defn get-clj-nses []
@@ -213,7 +214,7 @@
   (let [cljs-nses-and-vars (or cljs-nses-and-vars (get-cljs-nses-and-vars))
         nses (or nses
                  (->> (concat (get-clj-nses) (get-cljs-nses cljs-nses-and-vars))
-                      (sort-by :sym)
+                      (sort-by #(-> % :sym str))
                       vec))
         vars (case type
                :clj (cond
