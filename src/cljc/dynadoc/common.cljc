@@ -88,7 +88,9 @@
        (if var-sym
          (into [:div {:class "section"}
                 [:h2 "Example"]]
-           (mapv (partial example->html (and (= type :cljs) prod?))
+           (mapv (partial example->html
+                   (or (and (= type :cljs) prod?)
+                       (and (= type :clj) static?)))
              examples))
          (expandable-section
            {:label "Example"

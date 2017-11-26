@@ -154,6 +154,25 @@
           :var-syms (vec (keys (ns-publics %))))
     (all-ns)))
 
+(defn get-defexample-registry []
+  (try
+    (require 'dynadoc.example)
+    (var-get (resolve (symbol "dynadoc.example" "registry-ref")))
+    (catch Exception _)))
+
+(defn get-clj-examples [ns-sym]
+  (when-let [registry-ref (get-defexample-registry)]
+    (reduce
+      (fn [m [k v]]
+        (assoc m k {:sym k
+                    :examples (vec
+                                (for [i (range (count v))]
+                                  (-> (get v i)
+                                      process-example
+                                      (assoc :id (str ns-sym "/" k "/" i)))))}))
+      {}
+      (get @registry-ref ns-sym))))
+
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
     {:sym var-sym
@@ -170,22 +189,24 @@
                  (clojure.pprint/pprint
                    (form sym))))
              (catch Exception _))
-     :examples (try
-                 (require 'dynadoc.example)
-                 (let [registry-ref (var-get (resolve (symbol "dynadoc.example" "registry-ref")))
-                       examples (get-in @registry-ref [ns-sym var-sym])]
+     :examples (when-let [registry-ref (get-defexample-registry)]
+                 (let [examples (get-in @registry-ref [ns-sym var-sym])]
                    (vec
                      (for [i (range (count examples))]
                        (-> (get examples i)
                            process-example
-                           (assoc :id (str ns-sym "/" var-sym "/" i))))))
-                 (catch Exception _))}))
+                           (assoc :id (str ns-sym "/" var-sym "/" i)))))))}))
 
 (defn get-clj-vars [ns-sym]
   (->> (ns-publics ns-sym)
        keys
-       (mapv (partial get-clj-var-info ns-sym))
-       (sort-by :sym)
+       (reduce
+         (fn [m var-sym]
+           (assoc m var-sym (get-clj-var-info ns-sym var-sym)))
+         {})
+       (merge (get-clj-examples ns-sym))
+       vals
+       (sort-by #(-> % :sym str))
        vec))
 
 (defn page [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
@@ -230,7 +251,8 @@
 (defn export [{:strs [pages export-filter type ns-sym var-sym]}]
   (let [type (some-> type keyword)
         ns-sym (some-> ns-sym symbol)
-        var-sym (some-> var-sym symbol)
+        var-sym (when var-sym
+                  (edn/read-string var-sym))
         zip-file (io/file "dynadoc-export.zip")]
     (with-open [zip (ZipOutputStream. (io/output-stream zip-file))]
       (case pages
@@ -318,10 +340,10 @@
               (.closeEntry zip)))))
       (doseq [path public-files]
         (.putNextEntry zip (ZipEntry. path))
-        (io/copy (->> path
-                      (str "dynadoc-public/")
-                      io/resource
-                      io/file)
+        (io/copy
+          (io/input-stream
+            (or (io/resource (str "dynadoc-extend/" path))
+                (io/resource (str "dynadoc-public/" path))))
           zip)
         (.closeEntry zip)))
     zip-file))
@@ -336,7 +358,9 @@
         {:status 200
          :headers {"Content-Type" "text/plain"}
          :body (->> request
-                    body-string
+                    :body
+                    .bytes
+                    slurp
                     edn/read-string
                     es/code->results
                     (mapv form->serializable)
@@ -349,7 +373,7 @@
       (let [[type ns-sym var-sym] (remove empty? (str/split uri #"/"))
             type (some-> type keyword)
             ns-sym (some-> ns-sym symbol)
-            var-sym (some-> var-sym (java.net.URLDecoder/decode "UTF-8") symbol)]
+            var-sym (some-> var-sym (java.net.URLDecoder/decode "UTF-8") edn/read-string)]
         (when (contains? #{:clj :cljs} type)
           {:status 200
            :headers {"Content-Type" "text/html"}
@@ -364,7 +388,10 @@
 
 (defn start
   ([opts]
-   (start (wrap-resource handler "dynadoc-public") opts))
+   (-> handler
+       (wrap-resource "dynadoc-extend")
+       (wrap-resource "dynadoc-public")
+       (start opts)))
   ([app opts]
    (when-not @*web-server
      (->> (merge {:port 0} opts)
