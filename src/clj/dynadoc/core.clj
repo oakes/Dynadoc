@@ -390,8 +390,8 @@
 (defn start
   ([opts]
    (-> handler
-       (wrap-resource "dynadoc-extend")
        (wrap-resource "dynadoc-public")
+       (wrap-resource "dynadoc-extend")
        (start opts)))
   ([app opts]
    (when-not @*web-server

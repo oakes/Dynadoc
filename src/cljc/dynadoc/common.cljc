@@ -39,8 +39,8 @@
      (when with-card
        [:div {:class "card" :id id}])
      [:div {:class "paren-soup example"}
-      (when-not hide-instarepl?
-        [:div {:class "instarepl" :style {:display "list-item"}}])
+      [:div {:class "instarepl"
+             :style {:display (if hide-instarepl? "none" "list-item")}}]
       [:div {:class "content"
              :dangerouslySetInnerHTML {:__html html}}]]]))
 
