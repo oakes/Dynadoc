@@ -10,7 +10,7 @@
                   ; clj deps
                   [org.clojure/clojure "1.8.0" :scope "provided"]
                   [nightlight "1.9.3" :scope "test"]
-                  [defexample "1.6.0"]
+                  [defexample "1.6.1"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [ring "1.6.1"]
                   [http-kit "2.2.0"]
