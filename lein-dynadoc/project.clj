@@ -1,4 +1,4 @@
-(defproject dynadoc/lein-dynadoc "1.9.3"
+(defproject dynadoc/lein-dynadoc "1.0.0"
   :description "A conveninent Dynadoc launcher for Leiningen projects"
   :url "https://github.com/oakes/Dynadoc"
   :license {:name "Public Domain"
