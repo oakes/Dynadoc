@@ -27,8 +27,9 @@ ClojureScript examples are particularly cool. They can optionally ask for a DOM 
 
 ### 3. Export static docs that still have ClojureScript interactivity
 
-While Dynadoc is primarily meant for being run locally, it fully supports exporting to a static site so you can put your docs online. The crazy part is that the interactive ClojureScript examples will still work, because ClojureScript can compile itself in the browser! Check out the [play-cljs dynadocs](https://oakes.github.io/play-cljs/) to see this in action.
+While Dynadoc is primarily meant for being run locally, it fully supports exporting to a static site so you can put your docs online.
 
+The crazy part is that the interactive ClojureScript examples will still work, because ClojureScript can compile itself in the browser! Check out the [play-cljs dynadocs](https://oakes.github.io/play-cljs/) to see this in action.
 
 ## Licensing
 
