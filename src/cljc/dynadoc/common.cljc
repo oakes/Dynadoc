@@ -76,6 +76,8 @@
                 [:h2 (pr-str (apply list sym arglist))])
            arglists)
          [[:h2 (str sym)]]))
+     (when doc
+       [:div {:class "section doc"} doc])
      (when spec
        (if var-sym
          [:div {:class "section"}
@@ -85,8 +87,6 @@
            {:label "Spec"
             :url url
             :*content (delay (spec->html spec))})))
-     (when doc
-       [:div {:class "section doc"} doc])
      (when (seq examples)
        (into [:div {:class "section"}
                 [:h2 "Example"]]
