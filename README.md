@@ -4,6 +4,8 @@
 
 This is not your father's documentation generator. Dynadoc is all about making better documentation by combining Clojure's incredible dynamism with my inability to come up with good project names.
 
+* See the screencast:
+  *  https://www.youtube.com/watch?v=MIe7ZNbYFOk
 * See the dynadocs for play-cljs, a ClojureScript game library:
   *  https://oakes.github.io/play-cljs/
 * See the example projects for tips on how to set up Dynadoc:
