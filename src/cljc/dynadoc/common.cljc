@@ -78,6 +78,13 @@
          [[:h2 (str sym)]]))
      (when doc
        [:div {:class "section doc"} doc])
+     (when (seq examples)
+       (into [:div {:class "section"}
+                [:h2 "Example"]]
+           (mapv (partial example->html
+                   (or (and (= type :cljs) prod?)
+                       (and (= type :clj) static?)))
+             examples)))
      (when spec
        (if var-sym
          [:div {:class "section"}
@@ -87,13 +94,6 @@
            {:label "Spec"
             :url url
             :*content (delay (spec->html spec))})))
-     (when (seq examples)
-       (into [:div {:class "section"}
-                [:h2 "Example"]]
-           (mapv (partial example->html
-                   (or (and (= type :cljs) prod?)
-                       (and (= type :clj) static?)))
-             examples)))
      (when source
        (if var-sym
          [:div {:class "section"}
