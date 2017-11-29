@@ -16,7 +16,7 @@
                   [http-kit "2.2.0"]
                   [eval-soup "1.2.2"]
                   [rum "0.10.8"]
-                  [html-soup "1.5.0"]]
+                  [html-soup "1.5.1"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")
