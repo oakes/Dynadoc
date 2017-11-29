@@ -9,6 +9,6 @@
   [p port PORT int "The port that Dynadoc runs on"
    _ host HOST str "The hostname that Dynadoc listens on"]
   (core/with-pass-thru _
-    (start {:port (or port 4000)
+    (start {:port (or port 5000)
             :ip (or host "0.0.0.0")})))
 
