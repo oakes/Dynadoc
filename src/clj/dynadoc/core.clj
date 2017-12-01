@@ -127,11 +127,13 @@
           ns-publics (resolve (symbol "cljs.analyzer.api" "ns-publics"))
           get-clj-vars (fn [ns-sym]
                          (reduce
-                           (fn [v [var-sym {:keys [doc arglists]}]]
-                             (conj v
-                               {:sym var-sym
-                                :meta {:doc doc
-                                       :arglists arglists}}))
+                           (fn [v [var-sym {:keys [doc arglists anonymous]}]]
+                             (if anonymous
+                               v
+                               (conj v
+                                 {:sym var-sym
+                                  :meta {:doc doc
+                                         :arglists arglists}})))
                            []
                            (ns-publics *env ns-sym)))]
       (reduce
