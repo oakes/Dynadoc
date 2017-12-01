@@ -9,7 +9,7 @@
                   [mistakes-were-made "1.7.3"]
                   ; clj deps
                   [org.clojure/clojure "1.8.0" :scope "provided"]
-                  [nightlight "2.0.0" :scope "test"]
+                  [nightlight "2.0.1" :scope "test"]
                   [defexample "1.6.1"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [ring "1.6.1"]
