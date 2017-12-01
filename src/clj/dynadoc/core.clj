@@ -23,22 +23,6 @@
 (defonce *web-server (atom nil))
 (defonce *options (atom nil))
 
-(def public-files
-  ["main.js"
-   "paren-soup-dark.css"
-   "paren-soup-light.css"
-   "style.css"
-   "fonts/FiraCode-Bold.otf"
-   "fonts/FiraCode-Light.otf"
-   "fonts/FiraCode-Medium.otf"
-   "fonts/FiraCode-Regular.otf"
-   "fonts/FiraCode-Retina.otf"
-   "fonts/glyphicons-halflings-regular.eot"
-   "fonts/glyphicons-halflings-regular.svg"
-   "fonts/glyphicons-halflings-regular.ttf"
-   "fonts/glyphicons-halflings-regular.woff"
-   "fonts/glyphicons-halflings-regular.woff2"])
-
 (defn get-cljs-arglists [args]
   (loop [args args
          arglists []]
@@ -244,10 +228,21 @@
         (str/replace "{{content}}" (rum/render-html (common/app state)))
         (str/replace "{{initial-state}}" (pr-str @state)))))
 
-(defn form->serializable [form]
-  (if (instance? Exception form)
-    [(.getMessage form)]
-    (pr-str form)))
+(def public-files
+  ["main.js"
+   "paren-soup-dark.css"
+   "paren-soup-light.css"
+   "style.css"
+   "fonts/FiraCode-Bold.otf"
+   "fonts/FiraCode-Light.otf"
+   "fonts/FiraCode-Medium.otf"
+   "fonts/FiraCode-Regular.otf"
+   "fonts/FiraCode-Retina.otf"
+   "fonts/glyphicons-halflings-regular.eot"
+   "fonts/glyphicons-halflings-regular.svg"
+   "fonts/glyphicons-halflings-regular.ttf"
+   "fonts/glyphicons-halflings-regular.woff"
+   "fonts/glyphicons-halflings-regular.woff2"])
 
 (defn export [{:strs [pages export-filter type ns-sym var-sym]}]
   (let [type (some-> type keyword)
@@ -348,6 +343,11 @@
           zip)
         (.closeEntry zip)))
     zip-file))
+
+(defn form->serializable [form]
+  (if (instance? Exception form)
+    [(.getMessage form)]
+    (pr-str form)))
 
 (defn handler [{:keys [uri] :as request}]
   (or (case uri
