@@ -100,7 +100,7 @@
             :else ns->vars))
         ns->vars))))
 
-(defn get-cljs-nses-and-vars []
+(defn get-cljs-nses-and-vars-statically []
   (loop [files (file-seq (io/file "."))
          ns->vars {}]
     (if-let [f (first files)]
@@ -119,6 +119,30 @@
           (update m k concat (vals v)))
         {}
         ns->vars))))
+
+(defn get-cljs-nses-and-vars-dynamically []
+  (when-let [*env (:cljs-env @*options)]
+    (require 'cljs.analyzer.api)
+    (let [all-ns (resolve (symbol "cljs.analyzer.api" "all-ns"))
+          ns-publics (resolve (symbol "cljs.analyzer.api" "ns-publics"))
+          get-clj-vars (fn [ns-sym]
+                         (reduce
+                           (fn [v [var-sym {:keys [doc arglists]}]]
+                             (conj v
+                               {:sym var-sym
+                                :meta {:doc doc
+                                       :arglists arglists}}))
+                           []
+                           (ns-publics *env ns-sym)))]
+      (reduce
+        (fn [m ns-sym]
+          (assoc m ns-sym (get-clj-vars ns-sym)))
+        {}
+        (all-ns *env)))))
+
+(defn get-cljs-nses-and-vars []
+  (or (get-cljs-nses-and-vars-dynamically)
+      (get-cljs-nses-and-vars-statically)))
 
 (defn get-cljs-nses [cljs-nses-and-vars]
   (map #(hash-map
