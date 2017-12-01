@@ -37,7 +37,7 @@ The crazy part is that the interactive ClojureScript examples will still work, b
 
 Please see [the example projects](https://github.com/oakes/dynadoc-examples) for guidance on how to use Dynadoc. You'll primarily run it via the Boot task or Lein plugin like they do. You can also just run it directly as a library -- just call `(dynadoc.core/start {:port 5000})` from anywhere in your project.
 
-I'll write better docs on this when I get the chance (yes...I do see the irony).
+If you want your ClojureScript examples to be interactive, you will also need to rebuild Dynadoc's frontend. To do this, you'll need to create a build configuration with these compiler options: `:output-to "resources/dynadoc-extend/main.js" :optimizations :simple`. The example repo contains both Lein and Boot projects that do this.
 
 ## Licensing
 
