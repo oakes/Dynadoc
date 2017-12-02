@@ -5,8 +5,6 @@
 
 (def ^:const page-url "https://clojars.org/dynadoc")
 
-(def meta-keys [:file :arglists :doc])
-
 (defn ns-sym->url [rel-path static? type ns-sym]
   (str rel-path (name type) "/" ns-sym (when static? ".html")))
 

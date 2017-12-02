@@ -4,12 +4,11 @@
                   [adzerk/boot-reload "0.5.2" :scope "test"]
                   [org.clojure/test.check "0.9.0" :scope "test"]
                   ; cljs deps
-                  [org.clojure/clojurescript "1.9.946" :scope "test"]
+                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
                   [paren-soup "2.9.3"]
                   [mistakes-were-made "1.7.3"]
                   ; clj deps
                   [org.clojure/clojure "1.8.0" :scope "provided"]
-                  [nightlight "2.0.2" :scope "test"]
                   [defexample "1.6.1"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [ring "1.6.1"]
@@ -27,7 +26,7 @@
   '[adzerk.boot-reload :refer [reload]]
   '[dynadoc.core :refer [dev-start]]
   '[clojure.spec.test.alpha :refer [instrument]]
-  '[nightlight.boot :refer [nightlight]])
+  #_[nightlight.boot :refer [nightlight]])
 
 (task-options!
   pom {:project 'dynadoc
@@ -51,7 +50,7 @@
   (set-env! :resource-paths #{"src/clj" "src/cljc" "src/cljs" "resources" "dev-resources"})
   (comp
     (watch)
-    (nightlight :port 4000 :url "http://localhost:5000")
+    ;(nightlight :port 4000 :url "http://localhost:5000")
     (reload :asset-path "dynadoc-public")
     (cljs)
     (with-pass-thru _

@@ -1,4 +1,4 @@
-{:require  [nightlight.repl-server paren-soup.core-spec dynadoc.examples dynadoc.core]
+{:require  [paren-soup.core-spec dynadoc.examples dynadoc.core]
  :init-fns [cljs.spec.test.alpha/instrument]
  :compiler-options {:optimizations :none
                     :asset-path "/main.out"}}
