@@ -17,35 +17,57 @@
             [dynadoc.common :as common]
             [dynadoc.static :as static]
             [dynadoc.utils :as u]
+            [dynadoc.example :as ex]
             [eval-soup.core :as es])
   (:import [java.util.zip ZipEntry ZipOutputStream]))
 
 (defonce *web-server (atom nil))
 (defonce *options (atom nil))
 
+(defn get-examples
+  ([ns-sym var-sym]
+   (let [examples (get-in @ex/registry-ref [ns-sym var-sym])]
+     (vec
+       (for [i (range (count examples))]
+         (-> (get examples i)
+             u/process-example
+             (assoc :id (str ns-sym "/" var-sym "/" i)))))))
+  ([ns-sym]
+   (reduce
+     (fn [m [k v]]
+       (assoc m k {:sym k
+                   :examples (vec
+                               (for [i (range (count v))]
+                                 (-> (get v i)
+                                     u/process-example
+                                     (assoc :id (str ns-sym "/" k "/" i)))))}))
+     {}
+     (get @ex/registry-ref ns-sym))))
+
 (defn get-cljs-nses-and-vars-dynamically []
   (when-let [*env (:cljs-env @*options)]
     (require 'cljs.analyzer.api)
     (let [all-ns (resolve (symbol "cljs.analyzer.api" "all-ns"))
-          ns-publics (resolve (symbol "cljs.analyzer.api" "ns-publics"))
-          get-clj-vars (fn [ns-sym]
-                         (reduce
-                           (fn [v [var-sym {:keys [doc arglists anonymous]}]]
+          ns-publics (resolve (symbol "cljs.analyzer.api" "ns-publics"))]
+       (reduce
+         (fn [m ns-sym]
+           (let [var-map (reduce
+                           (fn [m [var-sym {:keys [doc arglists anonymous]}]]
                              (if anonymous
-                               v
-                               (conj v
+                               m
+                               (assoc m var-sym
                                  {:sym var-sym
                                   :meta {:doc doc
                                          :arglists (if (= 'quote (first arglists))
                                                      (second arglists)
-                                                     arglists)}})))
-                           []
-                           (ns-publics *env ns-sym)))]
-      (reduce
-        (fn [m ns-sym]
-          (assoc m ns-sym (get-clj-vars ns-sym)))
-        {}
-        (all-ns *env)))))
+                                                     arglists)}
+                                  :examples (get-examples ns-sym var-sym)})))
+                           {}
+                           (ns-publics *env ns-sym))
+                 var-map (merge (get-examples ns-sym) var-map)]
+             (assoc m ns-sym (vals var-map))))
+         {}
+         (all-ns *env)))))
 
 (defn get-cljs-nses-and-vars []
   (or (get-cljs-nses-and-vars-dynamically)
@@ -70,25 +92,6 @@
           :var-syms (vec (keys (ns-publics %))))
     (all-ns)))
 
-(defn get-defexample-registry []
-  (try
-    (require 'dynadoc.example)
-    (var-get (resolve (symbol "dynadoc.example" "registry-ref")))
-    (catch Exception _)))
-
-(defn get-clj-examples [ns-sym]
-  (when-let [registry-ref (get-defexample-registry)]
-    (reduce
-      (fn [m [k v]]
-        (assoc m k {:sym k
-                    :examples (vec
-                                (for [i (range (count v))]
-                                  (-> (get v i)
-                                      u/process-example
-                                      (assoc :id (str ns-sym "/" k "/" i)))))}))
-      {}
-      (get @registry-ref ns-sym))))
-
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
     {:sym var-sym
@@ -105,13 +108,7 @@
                  (clojure.pprint/pprint
                    (form sym))))
              (catch Exception _))
-     :examples (when-let [registry-ref (get-defexample-registry)]
-                 (let [examples (get-in @registry-ref [ns-sym var-sym])]
-                   (vec
-                     (for [i (range (count examples))]
-                       (-> (get examples i)
-                           u/process-example
-                           (assoc :id (str ns-sym "/" var-sym "/" i)))))))}))
+     :examples (get-examples ns-sym var-sym)}))
 
 (defn get-clj-vars [ns-sym]
   (->> (ns-publics ns-sym)
@@ -120,7 +117,7 @@
          (fn [m var-sym]
            (assoc m var-sym (get-clj-var-info ns-sym var-sym)))
          {})
-       (merge (get-clj-examples ns-sym))
+       (merge (get-examples ns-sym))
        vals
        (sort-by #(-> % :sym str))
        vec))
