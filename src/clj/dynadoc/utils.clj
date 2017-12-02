@@ -13,3 +13,10 @@
         (or (:init-expr with-focus)
             body)))))
 
+(defn flatten-vals [m]
+  (reduce
+    (fn [m [k v]]
+      (update m k concat (vals v)))
+    {}
+    m))
+

@@ -73,7 +73,7 @@
             :else ns->vars))
         ns->vars))))
 
-(defn get-cljs-nses-and-vars-statically []
+(defn get-cljs-nses-and-vars []
   (loop [files (file-seq (io/file "."))
          ns->vars {}]
     (if-let [f (first files)]
@@ -87,9 +87,5 @@
               (.printStackTrace e)
               ns->vars)))
         (recur (rest files) ns->vars))
-      (reduce
-        (fn [m [k v]]
-          (update m k concat (vals v)))
-        {}
-        ns->vars))))
+      ns->vars)))
 

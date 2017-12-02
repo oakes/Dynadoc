@@ -36,7 +36,9 @@
                                (conj v
                                  {:sym var-sym
                                   :meta {:doc doc
-                                         :arglists arglists}})))
+                                         :arglists (if (= 'quote (first arglists))
+                                                     (second arglists)
+                                                     arglists)}})))
                            []
                            (ns-publics *env ns-sym)))]
       (reduce
@@ -47,7 +49,7 @@
 
 (defn get-cljs-nses-and-vars []
   (or (get-cljs-nses-and-vars-dynamically)
-      (static/get-cljs-nses-and-vars-statically)))
+      (u/flatten-vals (static/get-cljs-nses-and-vars))))
 
 (defn get-cljs-nses [cljs-nses-and-vars]
   (map #(hash-map
