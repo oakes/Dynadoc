@@ -1,5 +1,6 @@
 (ns dynadoc.static
   (:require [dynadoc.utils :as u]
+            [dynadoc.example :as ex]
             [clojure.java.io :as io]
             [clojure.tools.reader :as r]
             [clojure.tools.reader.reader-types :refer [indexing-push-back-reader]]))
@@ -49,27 +50,21 @@
                  (list? form)
                  (symbol? (first form))
                  (contains? #{'defexample 'defexamples} (-> form first name symbol)))
-            (try
-              (require 'dynadoc.example)
-              (let [parse-ns (resolve (symbol "dynadoc.example" "parse-ns"))
-                    parse-val (resolve (symbol "dynadoc.example" "parse-val"))
-                    parse-example (resolve (symbol "dynadoc.example" "parse-example"))
-                    [sym k & args] form
-                    sym (-> sym name symbol)
-                    ns-sym (or (parse-ns k) current-ns)
-                    var-sym (parse-val k)
-                    examples (case sym
-                               defexample [(parse-example args)]
-                               defexamples (mapv parse-example args))
-                    examples (vec
-                               (for [i (range (count examples))]
-                                 (-> (get examples i)
-                                     u/process-example
-                                     (assoc :id (str ns-sym "/" var-sym "/" i)))))]
-                (update-in ns->vars [ns-sym var-sym] merge
-                  {:sym var-sym
-                   :examples examples}))
-              (catch Exception _ ns->vars))
+            (let [[sym k & args] form
+                  sym (-> sym name symbol)
+                  ns-sym (or (ex/parse-ns k) current-ns)
+                  var-sym (ex/parse-val k)
+                  examples (case sym
+                             defexample [(ex/parse-example args)]
+                             defexamples (mapv ex/parse-example args))
+                  examples (vec
+                             (for [i (range (count examples))]
+                               (-> (get examples i)
+                                   u/process-example
+                                   (assoc :id (str ns-sym "/" var-sym "/" i)))))]
+              (update-in ns->vars [ns-sym var-sym] merge
+                {:sym var-sym
+                 :examples examples}))
             :else ns->vars))
         ns->vars))))
 
