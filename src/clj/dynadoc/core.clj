@@ -44,6 +44,14 @@
      {}
      (get @ex/registry-ref ns-sym))))
 
+(defn var-map->vars [ns-sym var-map]
+  (if (empty? var-map)
+    []
+    (->> (merge (get-examples ns-sym) var-map)
+         vals
+         (sort-by #(-> % :sym str))
+         vec)))
+
 (defn get-cljs-nses-and-vars-dynamically []
   (when-let [*env (:cljs-env @*options)]
     (require 'cljs.analyzer.api)
@@ -64,8 +72,8 @@
                                   :examples (get-examples ns-sym var-sym)})))
                            {}
                            (ns-publics *env ns-sym))
-                 var-map (merge (get-examples ns-sym) var-map)]
-             (assoc m ns-sym (vals var-map))))
+                 vars (var-map->vars ns-sym var-map)]
+             (assoc m ns-sym vars)))
          {}
          (all-ns *env)))))
 
@@ -74,11 +82,12 @@
       (u/flatten-vals (static/get-cljs-nses-and-vars))))
 
 (defn get-cljs-nses [cljs-nses-and-vars]
-  (map #(hash-map
-          :sym %
-          :type :cljs
-          :var-syms (mapv :sym (get cljs-nses-and-vars %)))
-    (keys cljs-nses-and-vars)))
+  (->> (keys cljs-nses-and-vars)
+       (map #(hash-map
+               :sym %
+               :type :cljs
+               :var-syms (mapv :sym (get cljs-nses-and-vars %))))
+       (remove #(-> % :var-syms empty?))))
 
 (defn get-cljs-vars [cljs-nses-and-vars ns]
   (->> (get cljs-nses-and-vars ns)
@@ -86,11 +95,12 @@
        vec))
 
 (defn get-clj-nses []
-  (map #(hash-map
-          :sym (ns-name %)
-          :type :clj
-          :var-syms (vec (keys (ns-publics %))))
-    (all-ns)))
+  (->> (all-ns)
+       (map #(hash-map
+               :sym (ns-name %)
+               :type :clj
+               :var-syms (vec (keys (ns-publics %)))))
+       (remove #(-> % :var-syms empty?))))
 
 (defn get-clj-var-info [ns-sym var-sym]
   (let [sym (symbol (str ns-sym) (str var-sym))]
@@ -117,10 +127,7 @@
          (fn [m var-sym]
            (assoc m var-sym (get-clj-var-info ns-sym var-sym)))
          {})
-       (merge (get-examples ns-sym))
-       vals
-       (sort-by #(-> % :sym str))
-       vec))
+       (var-map->vars ns-sym)))
 
 (defn page [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
   (let [cljs-nses-and-vars (or cljs-nses-and-vars (get-cljs-nses-and-vars))
