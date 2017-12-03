@@ -12,7 +12,7 @@
   (str rel-path (name type) "/" ns-sym "/"
     (if static?
       (str/replace (str var-sym) "?" "_q")
-      #?(:cljs (js/escape (str var-sym))
+      #?(:cljs (js/encodeURIComponent (str var-sym))
          :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8")))
     (when static? ".html")))
 
