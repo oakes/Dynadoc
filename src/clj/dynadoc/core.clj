@@ -218,8 +218,7 @@
               zip)
             (.closeEntry zip)
             (doseq [var-sym var-syms
-                    :let [var-name (-> var-sym str (str/replace "?" "_q"))
-                          path (str (name type) "/" ns-sym "/" var-name ".html")]]
+                    :let [path (common/var-sym->url "" true type ns-sym var-sym)]]
               (.putNextEntry zip (ZipEntry. path))
               (io/copy (page path
                          {:type type
@@ -257,8 +256,7 @@
               zip)
             (.closeEntry zip)
             (doseq [var-sym var-syms
-                    :let [var-name (-> var-sym str (str/replace "?" "_q"))
-                          path (str (name type) "/" sym "/" var-name ".html")]]
+                    :let [path (common/var-sym->url "" true type sym var-sym)]]
               (.putNextEntry zip (ZipEntry. path))
               (io/copy (page path
                          {:type type
