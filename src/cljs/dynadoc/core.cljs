@@ -10,7 +10,7 @@
             [goog.object :as gobj])
   (:import goog.net.XhrIo))
 
-(def ^:const version "1.1.3")
+(def ^:const version "1.1.4")
 (def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
 
 (defn with-focus->binding [with-focus]

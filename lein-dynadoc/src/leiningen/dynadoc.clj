@@ -20,7 +20,7 @@
   (eval/eval-in-project
     (deps/add-if-missing
       project
-      '[dynadoc/lein-dynadoc "1.1.3"])
+      '[dynadoc/lein-dynadoc "1.1.4"])
     `(do
        (dynadoc.core/start
          {:port ~port :ip ~host})
