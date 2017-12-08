@@ -6,8 +6,7 @@
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj]
-            [clojure.walk :refer [postwalk]]
-            [goog.object :as gobj])
+            [clojure.walk :refer [postwalk]])
   (:import goog.net.XhrIo))
 
 (def ^:const version "1.1.5")
