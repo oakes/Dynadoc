@@ -31,7 +31,7 @@
 
 (task-options!
   pom {:project 'dynadoc
-       :version "1.1.6"
+       :version "1.1.7-SNAPSHOT"
        :description "A dynamic documentation generator"
        :url "https://github.com/oakes/Dynadoc"
        :license {"Public Domain" "http://unlicense.org/UNLICENSE"}}
