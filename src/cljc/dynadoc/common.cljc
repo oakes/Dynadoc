@@ -12,11 +12,13 @@
   (str rel-path (name type) "/" ns-sym "/"
     (if static?
       (-> (str var-sym)
-          (str/replace "?" "_q")
-          (str/replace "<" "_l")
-          (str/replace ">" "_g")
-          (str/replace ":" "_k")
-          (str/replace "*" "_a"))
+          (str/replace "?" "'q'")
+          (str/replace "!" "'e'")
+          (str/replace "<" "'l'")
+          (str/replace ">" "'g'")
+          (str/replace ":" "'c'")
+          (str/replace "*" "'a'")
+          (str/replace "&" "'m'"))
       #?(:cljs (js/encodeURIComponent (str var-sym))
          :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8")))
     (when static? ".html")))
