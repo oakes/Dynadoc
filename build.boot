@@ -4,7 +4,7 @@
                   [adzerk/boot-reload "0.5.2" :scope "test"]
                   [org.clojure/test.check "0.9.0" :scope "test"]
                   [nightlight "2.0.4" :scope "test"]
-                  [org.clojars.oakes/boot-tools-deps "0.1.4" :scope "test"]]
+                  [org.clojars.oakes/boot-tools-deps "0.1.4.1" :scope "test"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")
