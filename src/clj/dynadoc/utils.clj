@@ -1,4 +1,5 @@
-(ns dynadoc.utils)
+(ns dynadoc.utils
+  (:require [clojure.pprint :as pp]))
 
 (defn form->serializable [form]
   (if (instance? Exception form)
@@ -9,7 +10,7 @@
   (assoc example
     :body-str
     (with-out-str
-      (clojure.pprint/pprint
+      (pp/pprint
         (or (:init-expr with-focus)
             body)))))
 
