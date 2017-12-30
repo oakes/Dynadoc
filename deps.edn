@@ -1,7 +1,7 @@
 {:paths ["src/clj" "src/cljc" "src/cljs"]
  :deps {org.clojure/clojure {:mvn/version "1.9.0" :scope "provided"}
         org.clojure/clojurescript {:mvn/version "1.9.946"}
-        paren-soup {:mvn/version "2.9.3"}
+        paren-soup {:mvn/version "2.9.4"}
         mistakes-were-made {:mvn/version "1.7.3"}
         defexample {:mvn/version "1.6.1"}
         javax.xml.bind/jaxb-api {:mvn/version "2.3.0"} ; necessary for Java 9 compatibility
@@ -9,4 +9,4 @@
         http-kit {:mvn/version "2.2.0"}
         eval-soup {:mvn/version "1.2.5"}
         rum {:mvn/version "0.10.8"}
-        html-soup {:mvn/version "1.5.2"}}}
+        html-soup {:mvn/version "1.5.3"}}}
