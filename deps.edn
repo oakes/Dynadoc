@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0" :scope "provided"}
         org.clojure/clojurescript {:mvn/version "1.9.946"}
         paren-soup {:mvn/version "2.9.4"}
-        mistakes-were-made {:mvn/version "1.7.3"}
+        mistakes-were-made {:mvn/version "1.7.4"}
         defexample {:mvn/version "1.6.1"}
         javax.xml.bind/jaxb-api {:mvn/version "2.3.0"} ; necessary for Java 9 compatibility
         ring {:mvn/version "1.6.3"}
