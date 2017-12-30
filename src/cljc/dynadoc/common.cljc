@@ -144,7 +144,7 @@
          nses))]))
 
 (rum/defcs export-form < (rum/local {} ::options)
-  [rum-state {:keys [type ns-sym var-sym export-filter]} *state]
+  [rum-state {:keys [type ns-sym var-sym export-filter exportable?]} *state]
   (let [*options (::options rum-state)
         {:keys [pages]
          :or {pages (if ns-sym :single :multiple)}} @*options]
@@ -188,8 +188,13 @@
      (when var-sym
        [:input {:type "hidden" :name "var-sym" :value (str var-sym)}])
      [:div {:style {:text-align "center"}}
-      [:button {:type "submit"}
-       "Download zip file"]]]))
+      [:button {:type "submit"
+                :disabled (not exportable?)}
+       "Download zip file"]]
+     (when-not exportable?
+       [:div {:style {:margin 10 :font-size 14}}
+        [:div [:b "You built Dynadoc with :optimizations set to :none"]]
+        [:div [:b "You must set it to :simple in order to export"]]])]))
 
 (rum/defc export [{:keys [cljs-started? static?] :as state} *state]
   (when-not static?

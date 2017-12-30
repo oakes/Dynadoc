@@ -119,7 +119,9 @@
   (let [{:keys [static? dev?]} @*state]
     (when (and (not static?) (not dev?))
       (check-version)))
-  (swap! *state assoc :cljs-started? true)
+  (swap! *state assoc
+    :cljs-started? true
+    :exportable? js/COMPILED)
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block")))
