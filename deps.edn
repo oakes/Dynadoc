@@ -7,6 +7,6 @@
         javax.xml.bind/jaxb-api {:mvn/version "2.3.0"} ; necessary for Java 9 compatibility
         ring {:mvn/version "1.6.3"}
         http-kit {:mvn/version "2.2.0"}
-        eval-soup {:mvn/version "1.2.4"}
+        eval-soup {:mvn/version "1.2.5"}
         rum {:mvn/version "0.10.8"}
         html-soup {:mvn/version "1.5.2"}}}
