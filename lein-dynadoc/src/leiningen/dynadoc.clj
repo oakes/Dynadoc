@@ -3,8 +3,16 @@
             [leinjacker.eval :as eval]
             [clojure.tools.cli :as cli]
             [clojure.edn :as edn]
-            [clojure.string :as str]
-            [dynadoc.core :refer [cli-options]]))
+            [clojure.string :as str]))
+
+(def cli-options
+  [["-p" "--port PORT" "Port number"
+    :default 5000
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be an integer between 0 and 65536"]]
+   [nil "--host HOST" "The hostname that Dynadoc listens on"
+    :default "0.0.0.0"]
+   ["-u" "--usage" "Show CLI usage options"]])
 
 
 (defn start-dynadoc
