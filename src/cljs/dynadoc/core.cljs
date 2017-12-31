@@ -9,7 +9,7 @@
             [clojure.walk :refer [postwalk]])
   (:import goog.net.XhrIo))
 
-(def ^:const version "1.2.0")
+(def ^:const version "1.2.1")
 (def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
 
 (defn with-focus->binding [with-focus]
