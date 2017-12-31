@@ -18,7 +18,8 @@
             [dynadoc.static :as static]
             [dynadoc.utils :as u]
             [dynadoc.example :as ex]
-            [eval-soup.core :as es])
+            [eval-soup.core :as es]
+            [clojure.tools.cli :as cli])
   (:import [java.util.zip ZipEntry ZipOutputStream]))
 
 (defonce *web-server (atom nil))
@@ -347,4 +348,26 @@
                (wrap-reload)
                (wrap-file "target/dynadoc-public"))
       opts)))
+
+(def cli-options
+  [["-p" "--port PORT" "Port number"
+    :default 5000
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 0x10000) "Must be an integer between 0 and 65536"]]
+   [nil "--host HOST" "The hostname that Dynadoc listens on"
+    :default "0.0.0.0"]
+   ["-u" "--usage" "Show CLI usage options"]])
+
+(defn -main [& args]
+  (let [cli (cli/parse-opts args cli-options)]
+    (cond
+      ;; if there are CLI errors, print error messages and usage summary
+      (:errors cli)
+      (println (:errors cli) "\n" (:summary cli))
+      ;; if user asked for CLI usage, print the usage summary
+      (get-in cli [:options :usage])
+      (println (:summary cli))
+      ;; in other cases start Dynadoc
+      :otherwise
+      (start (:options cli)))))
 

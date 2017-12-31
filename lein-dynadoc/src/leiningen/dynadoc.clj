@@ -3,27 +3,18 @@
             [leinjacker.eval :as eval]
             [clojure.tools.cli :as cli]
             [clojure.edn :as edn]
-            [clojure.string :as str]))
-
-(def cli-options
-  [["-p" "--port PORT" "Port number"
-    :default 5000
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Must be an integer between 0 and 65536"]]
-   [nil "--host HOST" "The hostname that Dynadoc listens on"
-    :default "0.0.0.0"]
-   ["-u" "--usage" "Show CLI usage options"]])
+            [clojure.string :as str]
+            [dynadoc.core :refer [cli-options]]))
 
 
 (defn start-dynadoc
-  [{:keys [main] :as project} {:keys [port host] :as options}]
+  [{:keys [main] :as project} options]
   (eval/eval-in-project
     (deps/add-if-missing
       project
       '[dynadoc/lein-dynadoc "1.2.0"])
     `(do
-       (dynadoc.core/start
-         {:port ~port :ip ~host})
+       (dynadoc.core/start ~options)
        (when '~main (require '~main)))
     `(require 'dynadoc.core)))
 
@@ -40,7 +31,7 @@
       ;; if user asked for CLI usage, print the usage summary
       (get-in cli [:options :usage])
       (println (:summary cli))
-      ;; in other cases start Nightlight
+      ;; in other cases start Dynadoc
       :otherwise
       (start-dynadoc project (:options cli)))))
 
