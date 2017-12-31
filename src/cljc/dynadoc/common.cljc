@@ -37,38 +37,56 @@
      (when @*expanded?
        @*content)]))
 
-(rum/defc example->html [hide-instarepl? {:keys [id doc body-str with-card]}]
+(defn init-editor [rum-state]
+  (let [[state] (:rum/args rum-state)]
+    (when-let [init (:init-editor state)]
+      (init (rum/dom-node rum-state))))
+  rum-state)
+
+(defn init-example-editor [rum-state]
+  (let [[state example] (:rum/args rum-state)]
+    (when-let [init (:init-example-editor state)]
+      (init (rum/dom-node rum-state) example)))
+  rum-state)
+
+(rum/defc example->html < {:after-render init-example-editor}
+  [{:keys [type prod? static?] :as state}
+   {:keys [id doc body-str with-card] :as example}]
   (when-let [html (try
                     (hs/code->html body-str)
                     (catch #?(:clj Exception :cljs js/Error) _))]
-    [:div {:class "section"}
-     [:div {:class "section doc"} doc]
-     (when (and with-card (not hide-instarepl?))
-       [:div {:class "card" :id id}])
-     [:div {:class "paren-soup example"}
-      [:div {:class "instarepl"
-             :style {:display (if hide-instarepl? "none" "list-item")}}]
-      [:div {:class "content"
-             :dangerouslySetInnerHTML {:__html html}}]]]))
+    (let [hide-instarepl? (or (and (= type :cljs) prod?)
+                              (and (= type :clj) static?))]
+      [:div {:class "section"}
+       [:div {:class "section doc"} doc]
+       (when (and with-card (not hide-instarepl?))
+         [:div {:class "card" :id id}])
+       [:div {:class "paren-soup"}
+        [:div {:class "instarepl"
+               :style {:display (if hide-instarepl? "none" "list-item")}}]
+        [:div {:class "content"
+               :dangerouslySetInnerHTML {:__html html}}]]])))
 
-(rum/defc source->html [source]
+(rum/defc source->html < {:after-render init-editor}
+  [state source]
   (when-let [html (try
                     (hs/code->html source)
                     (catch #?(:clj Exception :cljs js/Error) _))]
-    [:div {:class "paren-soup nonedit"}
+    [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
-(rum/defc spec->html [spec]
+(rum/defc spec->html < {:after-render init-editor}
+  [state spec]
   (when-let [html (try
                     (hs/code->html spec)
                     (catch #?(:clj Exception :cljs js/Error) _))]
-    [:div {:class "paren-soup nonedit"}
+    [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
 (rum/defc var->html
-  [{:keys [ns-sym var-sym type prod? rel-path static?] :as state}
+  [{:keys [ns-sym var-sym type rel-path static?] :as state}
    {:keys [sym meta source spec examples]}]
   (let [{:keys [arglists doc]} meta
         url (var-sym->url rel-path static? type ns-sym sym)]
@@ -86,28 +104,26 @@
      (when (seq examples)
        (into [:div {:class "section"}
               [:h2 "Example"]]
-         (mapv (partial example->html
-                 (or (and (= type :cljs) prod?)
-                     (and (= type :clj) static?)))
+         (mapv (partial example->html state)
            examples)))
      (when spec
        (if var-sym
          [:div {:class "section"}
           [:h2 "Spec"]
-          (spec->html spec)]
+          (spec->html state spec)]
          (expandable-section
            {:label "Spec"
             :url url
-            :*content (delay (spec->html spec))})))
+            :*content (delay (spec->html state spec))})))
      (when source
        (if var-sym
          [:div {:class "section"}
           [:h2 "Source"]
-          (source->html source)]
+          (source->html state source)]
          (expandable-section
            {:label "Source"
             :url url
-            :*content (delay (source->html source))})))]))
+            :*content (delay (source->html state source))})))]))
 
 (rum/defcs sidebar  < (rum/local "" ::search)
   [rum-state {:keys [nses cljs-started? export-filter rel-path static?]}]

@@ -40,7 +40,7 @@
     (deps)
     (watch)
     (nightlight :port 4000 :url "http://localhost:5000")
-    (reload :asset-path "dynadoc-public")
+    (reload :on-jsload 'dynadoc.core/reload :asset-path "dynadoc-public")
     (cljs)
     (with-pass-thru _
       (require

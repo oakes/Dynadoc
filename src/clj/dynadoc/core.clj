@@ -129,7 +129,7 @@
          {})
        (var-map->vars ns-sym)))
 
-(defn page [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
+(defn page-state [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
   (let [cljs-nses-and-vars (or cljs-nses-and-vars (get-cljs-nses-and-vars))
         nses (or nses
                  (->> (concat (get-clj-nses) (get-cljs-nses cljs-nses-and-vars))
@@ -150,18 +150,21 @@
                      count
                      (- 1)
                      (repeat "../")
-                     str/join)
-        state (atom (merge opts
-                      {:static? static?
-                       :nses nses
-                       :ns-meta (when (= type :clj)
-                                  (some-> ns-sym the-ns meta))
-                       :vars vars
-                       :rel-path rel-path}))]
+                     str/join)]
+      (merge opts
+        {:static? static?
+         :nses nses
+         :ns-meta (when (= type :clj)
+                    (some-> ns-sym the-ns meta))
+         :vars vars
+         :rel-path rel-path})))
+
+(defn page [uri opts]
+  (let [state (page-state uri opts)]
     (-> "template.html" io/resource slurp
-        (str/replace "{{rel-path}}" rel-path)
-        (str/replace "{{content}}" (rum/render-html (common/app state)))
-        (str/replace "{{initial-state}}" (pr-str @state)))))
+        (str/replace "{{rel-path}}" (:rel-path state))
+        (str/replace "{{content}}" (rum/render-html (common/app (atom state))))
+        (str/replace "{{initial-state}}" (pr-str state)))))
 
 (def public-files
   ["main.js"
@@ -280,9 +283,13 @@
 (defn handler [{:keys [uri] :as request}]
   (or (case uri
         "/"
-        {:status 200
-         :headers {"Content-Type" "text/html"}
-         :body (page uri {:static? false})}
+        (if (= "text/edn" (get-in request [:headers "accept"]))
+          {:status 200
+           :headers {"Content-Type" "text/edn"}
+           :body (pr-str (page-state uri {:static? false}))}
+          {:status 200
+           :headers {"Content-Type" "text/html"}
+           :body (page uri {:static? false})})
         "/eval"
         {:status 200
          :headers {"Content-Type" "text/plain"}
@@ -304,9 +311,13 @@
             ns-sym (some-> ns-sym symbol)
             var-sym (some-> var-sym (java.net.URLDecoder/decode "UTF-8") edn/read-string)]
         (when (contains? #{:clj :cljs} type)
-          {:status 200
-           :headers {"Content-Type" "text/html"}
-           :body (page uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym})}))
+          (if (= "text/edn" (get-in request [:headers "accept"]))
+            {:status 200
+             :headers {"Content-Type" "text/edn"}
+             :body (pr-str (page-state uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym}))}
+            {:status 200
+             :headers {"Content-Type" "text/html"}
+             :body (page uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym})})))
       (not-found "Page not found")))
 
 (defn print-server [server]

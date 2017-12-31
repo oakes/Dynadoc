@@ -78,21 +78,19 @@
     {:custom-load (fn [opts cb]
                     (cb {:lang :clj :source ""}))}))
 
-(defn init-paren-soup []
-  (let [examples (->> @*state :vars (mapcat :examples) vec)
-        editors (-> js/document (.querySelectorAll ".example") array-seq vec)]
-    (dotimes [i (count editors)]
-      (let [paren-soup (get editors i)
-            example (get examples i)]
-        (when-let [content (.querySelector paren-soup ".content")]
-          (set! (.-contentEditable content) true))
-        (ps/init paren-soup
-          (js->clj {:compiler-fn (if (= :clj (:type @*state))
-                                   (partial clj-compiler-fn example)
-                                   (partial cljs-compiler-fn example))})))))
-  (doseq [paren-soup (-> js/document (.querySelectorAll ".nonedit") array-seq vec)]
+(defn init-editor [elem]
+  (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
     (ps/init paren-soup
       (js->clj {:compiler-fn (fn [])}))))
+
+(defn init-example-editor [elem example]
+  (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
+    (when-let [content (.querySelector paren-soup ".content")]
+      (set! (.-contentEditable content) true))
+    (ps/init paren-soup
+      (js->clj {:compiler-fn (if (= :clj (:type @*state))
+                               (partial clj-compiler-fn example)
+                               (partial cljs-compiler-fn example))}))))
 
 (defn prod []
   (swap! *state assoc :prod? true))
@@ -109,6 +107,18 @@
         (swap! *state assoc :update? true)))
     "GET"))
 
+(defn reload []
+  (.send XhrIo
+    js/window.location.pathname
+    (fn [e]
+      (when (.isSuccess (.-target e))
+        (->> (.. e -target getResponseText)
+             read-string
+             (swap! *state merge))))
+    "GET"
+    nil
+    (clj->js {"Accept" "text/edn"})))
+
 (defn init []
   (swap! *state merge
     (-> (.querySelector js/document "#initial-state")
@@ -121,11 +131,12 @@
       (check-version)))
   (swap! *state assoc
     :cljs-started? true
-    :exportable? js/COMPILED)
+    :exportable? js/COMPILED
+    :init-editor init-editor
+    :init-example-editor init-example-editor)
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
-      (set! (.-display (.-style button)) "inline-block")))
-  (init-paren-soup))
+      (set! (.-display (.-style button)) "inline-block"))))
 
 (init)
 
