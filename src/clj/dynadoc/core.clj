@@ -358,17 +358,8 @@
                (wrap-file "target/dynadoc-public"))
       opts)))
 
-(def cli-options
-  [["-p" "--port PORT" "Port number"
-    :default 5000
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Must be an integer between 0 and 65536"]]
-   [nil "--host HOST" "The hostname that Dynadoc listens on"
-    :default "0.0.0.0"]
-   ["-u" "--usage" "Show CLI usage options"]])
-
 (defn -main [& args]
-  (let [cli (cli/parse-opts args cli-options)]
+  (let [cli (cli/parse-opts args u/cli-options)]
     (cond
       ;; if there are CLI errors, print error messages and usage summary
       (:errors cli)
