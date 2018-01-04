@@ -32,7 +32,8 @@ html, body, .paren-soup {
     overflow: auto;
 }
 .var-info {
-    margin: 30px;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
 .doc {
     white-space: pre;
