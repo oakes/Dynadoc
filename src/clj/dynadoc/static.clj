@@ -30,6 +30,8 @@
             (second form)
             current-ns)
           (cond
+            
+            ; functions
             (and current-ns
                  (list? form)
                  (contains? #{'def 'defn 'defonce} (first form))
@@ -46,6 +48,8 @@
                  :source (with-out-str
                            (clojure.pprint/pprint
                              form))}))
+            
+            ; examples
             (and current-ns
                  (list? form)
                  (symbol? (first form))
@@ -65,6 +69,34 @@
               (update-in ns->vars [ns-sym var-sym] merge
                 {:sym var-sym
                  :examples examples}))
+            
+            ; protocols
+            (and current-ns
+                 (list? form)
+                 (= 'defprotocol (first form))
+                 (symbol? (second form)))
+            (let [[call var-sym] form
+                  methods (reduce
+                            (fn [methods sub-form]
+                              (if (list? sub-form)
+                                (conj methods
+                                  {:sym (first sub-form)
+                                   :meta {:doc (first (filter string? sub-form))
+                                          :arglists (filter vector? sub-form)}
+                                   :protocol var-sym})
+                                methods))
+                            []
+                            form)
+                  protocol {:sym var-sym
+                            :meta {:doc (first (filter string? form))}
+                            :methods (sort (map :sym methods))}]
+              (reduce
+                (fn [ns->vars {:keys [sym] :as parsed-var}]
+                  (update-in ns->vars [current-ns sym] merge parsed-var))
+                ns->vars
+                (conj methods protocol)))
+            
+            ; else
             :else ns->vars))
         ns->vars))))
 

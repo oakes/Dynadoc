@@ -61,7 +61,7 @@
        (reduce
          (fn [m ns-sym]
            (let [var-map (reduce
-                           (fn [m [var-sym {:keys [doc arglists anonymous]}]]
+                           (fn [m [var-sym {:keys [doc arglists anonymous] :as parsed-var}]]
                              (if anonymous
                                m
                                (assoc m var-sym
@@ -70,7 +70,16 @@
                                          :arglists (if (= 'quote (first arglists))
                                                      (second arglists)
                                                      arglists)}
-                                  :examples (get-examples ns-sym var-sym)})))
+                                  :examples (get-examples ns-sym var-sym)
+                                  :methods (some-> parsed-var
+                                                   :protocol-info
+                                                   :methods
+                                                   keys
+                                                   sort)
+                                  :protocol (some-> parsed-var
+                                                    :protocol
+                                                    name
+                                                    symbol)})))
                            {}
                            (ns-publics *env ns-sym))
                  vars (var-map->vars ns-sym var-map)]

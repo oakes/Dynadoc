@@ -87,10 +87,10 @@
 
 (rum/defc var->html
   [{:keys [ns-sym var-sym type rel-path static?] :as state}
-   {:keys [sym meta source spec examples]}]
+   {:keys [sym meta source spec examples methods protocol]}]
   (let [{:keys [arglists doc]} meta
         url (var-sym->url rel-path static? type ns-sym sym)]
-    [:div
+    [:div {:class "var-info"}
      (into (if var-sym
              [:div]
              [:a {:href url}])
@@ -99,6 +99,20 @@
                 [:h2 (pr-str (apply list sym arglist))])
            arglists)
          [[:h2 (str sym)]]))
+     (when methods
+       [:div {:class "section"}
+        [:h3 "Methods in this protocol"]
+        (into [:ul]
+          (for [method-sym methods]
+            [:li [:a {:href (var-sym->url rel-path static? type ns-sym method-sym)}
+                  (str method-sym)]]))])
+     (when protocol
+       [:div {:class "section"}
+        [:h3
+         "Part of the "
+         [:a {:href (var-sym->url rel-path static? type ns-sym protocol)}
+          (str protocol)]
+         " protocol"]])
      (when doc
        [:div {:class "section doc"} doc])
      (when (seq examples)
