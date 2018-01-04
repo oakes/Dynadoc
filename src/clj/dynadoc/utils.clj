@@ -1,5 +1,7 @@
 (ns dynadoc.utils
-  (:require [clojure.pprint :as pp]))
+  (:require [clojure.edn :as edn]
+            [clojure.pprint :as pp]
+            [clojure.string :as str]))
 
 (def cli-options
   [["-p" "--port PORT" "Port number"
@@ -29,4 +31,11 @@
       (update m k concat (vals v)))
     {}
     m))
+
+(defn parse-uri [uri]
+  (let [[type ns-sym var-sym] (remove empty? (str/split uri #"/"))
+        type (some-> type keyword)
+        ns-sym (some-> ns-sym symbol)
+        var-sym (some-> var-sym (java.net.URLDecoder/decode "UTF-8") edn/read-string)]
+    [type ns-sym var-sym]))
 

@@ -18,7 +18,7 @@
 Simple games may only need to have one screen. They are a useful way to
 isolate different aspects of your game. For example, you could make one
 screen display the title and menu, and another screen contain the game
-itself.
+itself. 
 
 You can create a screen by using `reify` like this:
 

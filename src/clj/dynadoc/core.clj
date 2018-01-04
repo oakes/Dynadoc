@@ -12,12 +12,13 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :refer [redirect not-found]]
             [ring.util.request :refer [body-string]]
-            [org.httpkit.server :refer [run-server]]
+            [org.httpkit.server :refer [run-server send!]]
             [rum.core :as rum]
             [dynadoc.common :as common]
             [dynadoc.static :as static]
             [dynadoc.utils :as u]
             [dynadoc.example :as ex]
+            [dynadoc.watch :as watch]
             [eval-soup.core :as es]
             [clojure.tools.cli :as cli])
   (:import [java.util.zip ZipEntry ZipOutputStream]))
@@ -89,6 +90,7 @@
 
 (defn get-cljs-nses-and-vars []
   (or (get-cljs-nses-and-vars-dynamically)
+      (some-> @watch/*cljs-info u/flatten-vals)
       (u/flatten-vals (static/get-cljs-nses-and-vars))))
 
 (defn get-cljs-nses [cljs-nses-and-vars]
@@ -293,13 +295,9 @@
 (defn handler [{:keys [uri] :as request}]
   (or (case uri
         "/"
-        (if (= "text/edn" (get-in request [:headers "accept"]))
-          {:status 200
-           :headers {"Content-Type" "text/edn"}
-           :body (pr-str (page-state uri {:static? false}))}
-          {:status 200
-           :headers {"Content-Type" "text/html"}
-           :body (page uri {:static? false})})
+        {:status 200
+         :headers {"Content-Type" "text/html"}
+         :body (page uri {:static? false})}
         "/eval"
         {:status 200
          :headers {"Content-Type" "text/plain"}
@@ -315,19 +313,14 @@
         {:status 200
          :headers {"Content-Type" "application/zip"}
          :body (export (:params request))}
+        "/watch"
+        (watch/watch-request request)
         nil)
-      (let [[type ns-sym var-sym] (remove empty? (str/split uri #"/"))
-            type (some-> type keyword)
-            ns-sym (some-> ns-sym symbol)
-            var-sym (some-> var-sym (java.net.URLDecoder/decode "UTF-8") edn/read-string)]
+      (let [[type ns-sym var-sym] (u/parse-uri uri)]
         (when (contains? #{:clj :cljs} type)
-          (if (= "text/edn" (get-in request [:headers "accept"]))
-            {:status 200
-             :headers {"Content-Type" "text/edn"}
-             :body (pr-str (page-state uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym}))}
-            {:status 200
-             :headers {"Content-Type" "text/html"}
-             :body (page uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym})})))
+          {:status 200
+           :headers {"Content-Type" "text/html"}
+           :body (page uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym})}))
       (not-found "Page not found")))
 
 (defn print-server [server]
@@ -344,6 +337,19 @@
        (start opts)))
   ([app opts]
    (when-not @*web-server
+     ; start watcher if parsing cljs statically
+     (when-not (:cljs-env @*options)
+       (add-watch watch/*cljs-info :cljs-info
+         (fn [_ _ _ cljs-info]
+           (doseq [[channel uri] @watch/*channel->uri]
+             (let [[type ns-sym var-sym] (u/parse-uri uri)]
+               (->> {:static? false :cljs-nses-and-vars (u/flatten-vals cljs-info)
+                     :type type :ns-sym ns-sym :var-sym var-sym}
+                    (page-state uri)
+                    pr-str
+                    (send! channel))))))
+       (watch/init-watcher!))
+     ; start server
      (->> (merge {:port 0} opts)
           (reset! *options)
           (run-server (-> app wrap-content-type wrap-params wrap-keyword-params))

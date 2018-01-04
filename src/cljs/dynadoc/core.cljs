@@ -107,17 +107,19 @@
         (swap! *state assoc :update? true)))
     "GET"))
 
-(defn reload []
-  (.send XhrIo
-    js/window.location.pathname
-    (fn [e]
-      (when (.isSuccess (.-target e))
-        (->> (.. e -target getResponseText)
+(defn init-watcher! []
+  (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
+        host (-> js/window .-location .-host)
+        sock (js/WebSocket. (str protocol "//" host "/watch"))]
+    (set! (.-onopen sock)
+      (fn [event]
+        (.send sock js/window.location.pathname)))
+    (set! (.-onmessage sock)
+      (fn [event]
+        (->> (.-data event)
              read-string
              (swap! *state merge))))
-    "GET"
-    nil
-    (clj->js {"Accept" "text/edn"})))
+    sock))
 
 (defn init []
   (swap! *state merge
@@ -126,14 +128,16 @@
         read-string))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
-  (let [{:keys [static? dev?]} @*state]
+  (let [{:keys [static? dev? watcher]} @*state]
     (when (and (not static?) (not dev?))
-      (check-version)))
-  (swap! *state assoc
-    :cljs-started? true
-    :exportable? js/COMPILED
-    :init-editor init-editor
-    :init-example-editor init-example-editor)
+      (check-version))
+    (swap! *state assoc
+      :cljs-started? true
+      :exportable? js/COMPILED
+      :init-editor init-editor
+      :init-example-editor init-example-editor
+      :watcher (when-not js/COMPILED
+                 (or watcher (init-watcher!)))))
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block"))))
