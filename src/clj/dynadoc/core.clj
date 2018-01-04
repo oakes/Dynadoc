@@ -338,7 +338,7 @@
   ([app opts]
    (when-not @*web-server
      ; start watcher if parsing cljs statically
-     (when-not (:cljs-env @*options)
+     (when-not (:cljs-env opts)
        (add-watch watch/*cljs-info :cljs-info
          (fn [_ _ _ cljs-info]
            (doseq [[channel uri] @watch/*channel->uri]
