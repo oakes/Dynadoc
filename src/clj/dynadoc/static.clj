@@ -35,6 +35,7 @@
             (and current-ns
                  (list? form)
                  (contains? #{'def 'defn 'defonce} (first form))
+                 (>= (count form) 3)
                  (not (some-> form second meta :private)))
             (let [[call sym & args] form]
               (update-in ns->vars [current-ns sym] merge
