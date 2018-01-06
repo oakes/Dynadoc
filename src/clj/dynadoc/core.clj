@@ -90,8 +90,9 @@
 
 (defn get-cljs-nses-and-vars []
   (or (get-cljs-nses-and-vars-dynamically)
-      (some-> @watch/*cljs-info u/flatten-vals)
-      (u/flatten-vals (static/get-cljs-nses-and-vars))))
+      (->> (static/get-cljs-nses-and-vars)
+           (reset! watch/*cljs-info)
+           u/flatten-vals)))
 
 (defn get-cljs-nses [cljs-nses-and-vars]
   (->> (keys cljs-nses-and-vars)
