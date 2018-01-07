@@ -3,7 +3,8 @@
   :dependencies '[[adzerk/boot-cljs "2.1.4" :scope "test"]
                   [adzerk/boot-reload "0.5.2" :scope "test"]
                   [org.clojure/test.check "0.9.0" :scope "test"]
-                  [nightlight "2.1.0" :scope "test"]
+                  [eval-soup "1.4.0"]
+                  [nightlight "2.1.0" :scope "test" :exclusions [eval-soup]]
                   [seancorfield/boot-tools-deps "0.1.4" :scope "test"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
@@ -19,7 +20,7 @@
 
 (task-options!
   pom {:project 'dynadoc
-       :version "1.3.1-SNAPSHOT"
+       :version "1.4.0-SNAPSHOT"
        :description "A dynamic documentation generator"
        :url "https://github.com/oakes/Dynadoc"
        :license {"Public Domain" "http://unlicense.org/UNLICENSE"}

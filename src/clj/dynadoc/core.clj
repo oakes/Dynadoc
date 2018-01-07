@@ -19,6 +19,7 @@
             [dynadoc.utils :as u]
             [dynadoc.example :as ex]
             [dynadoc.watch :as watch]
+            [dynadoc.aliases]
             [eval-soup.core :as es]
             [clojure.tools.cli :as cli])
   (:import [java.util.zip ZipEntry ZipOutputStream]))
@@ -138,7 +139,9 @@
        keys
        (reduce
          (fn [m var-sym]
-           (assoc m var-sym (get-clj-var-info ns-sym var-sym)))
+           (if (str/includes? (name var-sym) ".proxy$")
+             m
+             (assoc m var-sym (get-clj-var-info ns-sym var-sym))))
          {})
        (var-map->vars ns-sym)))
 
@@ -307,7 +310,7 @@
                     .bytes
                     slurp
                     edn/read-string
-                    es/code->results
+                    (#(es/code->results % {:disable-security? true}))
                     (mapv u/form->serializable)
                     pr-str)}
         "/dynadoc-export.zip"

@@ -6,7 +6,8 @@
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj]
-            [clojure.walk :refer [postwalk]])
+            [clojure.walk :refer [postwalk]]
+            [dynadoc.aliases])
   (:import goog.net.XhrIo))
 
 (def ^:const version "1.3.0")
@@ -31,14 +32,23 @@
 (defn add-card [form with-card id]
   (list 'let [with-card (list '.getElementById 'js/document id)] form))
 
-(defn transform [{:keys [body id with-focus with-card]} form-str]
-  (if (or with-focus with-card)
+(defn add-callback [form with-callback]
+  (list 'let ['es-channel '(dynadoc.aliases/chan)
+              with-callback '(fn [data]
+                               (dynadoc.aliases/put! es-channel data))]
+    form
+    '(dynadoc.aliases/<!! es-channel)))
+
+(defn transform [{:keys [body id with-focus with-card with-callback]} form-str]
+  (if (or with-focus with-card with-callback)
     (pr-str
       (cond-> (read-string form-str)
               (some? with-focus)
               (add-focus with-focus body)
               (some? with-card)
-              (add-card with-card id)))
+              (add-card with-card id)
+              (some? with-callback)
+              (add-callback with-callback)))
     form-str))
 
 (defn clj-compiler-fn [example forms cb]

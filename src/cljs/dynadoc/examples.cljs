@@ -1,6 +1,6 @@
 (ns dynadoc.examples
   (:require [dynadoc.state :refer [*state]])
-  (:require-macros [dynadoc.example :refer [defexamples]]))
+  (:require-macros [dynadoc.example :refer [defexample defexamples]]))
 
 (swap! *state assoc :dev? true)
 
@@ -12,6 +12,10 @@
      focus)]
   ["Serialize an error"
    (form->serializable (js/Error. "This is an error!"))])
+
+(defexample callback-test
+  {:with-callback callback}
+  (js/window.setTimeout (fn [] (callback "Finished!")) 1000))
 
 (defprotocol Screen
   "A screen object provides the basic lifecycle for a game.
