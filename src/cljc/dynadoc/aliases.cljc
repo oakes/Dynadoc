@@ -1,7 +1,7 @@
 (ns dynadoc.aliases
   (:require [clojure.core.async :as async]))
 
-(def chan async/chan)
+(def chan async/promise-chan)
 
 (def put! async/put!)
 
