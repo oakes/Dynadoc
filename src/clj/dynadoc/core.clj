@@ -173,7 +173,12 @@
          :ns-meta (when (= type :clj)
                     (some-> ns-sym the-ns meta))
          :vars vars
-         :rel-path rel-path})))
+         :rel-path rel-path
+         :check-for-updates? (and (not ns-sym)
+                                  (not var-sym)
+                                  (not static?)
+                                  (not (:dev? @*options))
+                                  (not (:disable-update-checker? @*options)))})))
 
 (defn page [uri opts]
   (let [state (page-state uri opts)]

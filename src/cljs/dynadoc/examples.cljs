@@ -1,8 +1,5 @@
 (ns dynadoc.examples
-  (:require [dynadoc.state :refer [*state]])
   (:require-macros [dynadoc.example :refer [defexample defexamples]]))
-
-(swap! *state assoc :dev? true)
 
 (defexamples dynadoc.core/form->serializable
   [{:doc "This is a test example"

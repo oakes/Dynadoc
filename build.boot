@@ -60,6 +60,6 @@
         '[dynadoc.core :refer [dev-start]]
         '[clojure.spec.test.alpha :refer [instrument]])
       ((resolve 'instrument))
-      ((resolve 'dev-start) {:port 5000}))
+      ((resolve 'dev-start) {:port 5000 :dev? true}))
     (target)))
 
