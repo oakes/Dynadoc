@@ -2,7 +2,6 @@
   (:require [cljs.reader :refer [read-string]]
             [rum.core :as rum]
             [dynadoc.common :as common]
-            [dynadoc.state :refer [*state]]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj]
@@ -12,6 +11,8 @@
 
 (def ^:const version "1.4.0")
 (def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
+
+(defonce *state (atom {}))
 
 (defn with-focus->binding [with-focus]
   (let [{:keys [binding]} with-focus
