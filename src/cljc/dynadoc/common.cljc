@@ -238,12 +238,6 @@
            :on-close #(swap! *state dissoc :export-filter)})])
      [:div {:style {:clear "right"}}]]))
 
-(rum/defc update-link []
-  [:div {:class "footer"}
-   [:a {:href page-url
-        :target "_blank"}
-    "New version of Dynadoc!"]])
-
 (rum/defc app < rum/reactive [*state]
   (let [{:keys [ns-sym ns-meta var-sym vars
                 cljs-started? prod? static? hide-sidebar? update?]
@@ -264,6 +258,12 @@
            (mapv (partial var->html state) vars))
          [:div {:class "vars"}
           (export state *state)])
+       (when update?
+         [:div {:class "footer"}
+          [:h2
+           [:a {:href page-url
+                :target "_blank"}
+            "New version of Dynadoc!"]]])
        (cond
          static?
          [:div {:class "footer"}
@@ -276,7 +276,5 @@
           "This is a custom build of "
           [:a {:href "https://github.com/oakes/Dynadoc"
                :target "_blank"}
-           "Dynadoc"]])
-       (when update?
-         (update-link)))]))
+           "Dynadoc"]]))]))
 

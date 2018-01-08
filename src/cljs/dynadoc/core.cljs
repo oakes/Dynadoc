@@ -138,8 +138,8 @@
         read-string))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
-  (let [{:keys [static? dev? watcher]} @*state]
-    (when (and (not static?) (not dev?))
+  (let [{:keys [static? dev? ns-sym var-sym watcher]} @*state]
+    (when (and (not static?) (not dev?) (not ns-sym) (not var-sym))
       (check-version))
     (swap! *state assoc
       :cljs-started? true
