@@ -56,7 +56,7 @@
          vec)))
 
 (defn get-cljs-nses-and-vars-dynamically []
-  (when-let [*env (:cljs-env @*options)]
+  (when-let [*env (:*cljs-env @*options)]
     (require 'cljs.analyzer.api)
     (let [all-ns (resolve (symbol "cljs.analyzer.api" "all-ns"))
           ns-publics (resolve (symbol "cljs.analyzer.api" "ns-publics"))]
@@ -347,7 +347,7 @@
   ([app opts]
    (when-not @*web-server
      ; start watcher if parsing cljs statically
-     (when-not (:cljs-env opts)
+     (when-not (:*cljs-env opts)
        (add-watch watch/*cljs-info :cljs-info
          (fn [_ _ _ cljs-info]
            (doseq [[channel uri] @watch/*channel->uri]
