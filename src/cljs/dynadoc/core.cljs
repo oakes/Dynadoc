@@ -42,14 +42,13 @@
 
 (defn transform [{:keys [body id with-focus with-card with-callback]} form-str]
   (if (or with-focus with-card with-callback)
-    (pr-str
-      (cond-> (read-string form-str)
-              (some? with-focus)
-              (add-focus with-focus body)
-              (some? with-card)
-              (add-card with-card id)
-              (some? with-callback)
-              (add-callback with-callback)))
+    (cond-> (read-string form-str)
+            (some? with-focus)
+            (add-focus with-focus body)
+            (some? with-card)
+            (add-card with-card id)
+            (some? with-callback)
+            (add-callback with-callback))
     form-str))
 
 (defn clj-compiler-fn [example forms cb]
@@ -65,7 +64,7 @@
                cb)
           (cb [])))
       "POST"
-      (pr-str (into [(str "(in-ns '" (:ns-sym @*state) ")")]
+      (pr-str (into [(list 'in-ns (list 'quote (:ns-sym @*state)))]
                 (mapv (partial transform (dissoc example :with-card)) forms))))
     (catch js/Error _ (cb []))))
 
@@ -79,7 +78,7 @@
 
 (defn cljs-compiler-fn [example forms cb]
   (es/code->results
-    (into [(str "(ns " (:ns-sym @*state) ")")]
+    (into [(list 'ns (:ns-sym @*state))]
       (mapv (partial transform example) forms))
     (fn [results]
       (->> results
