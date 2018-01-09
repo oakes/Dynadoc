@@ -144,8 +144,8 @@
     (swap! *state assoc
       :cljs-started? true
       :exportable? js/COMPILED
-      :init-editor init-editor
-      :init-example-editor init-example-editor
+      :init-editor (memoize init-editor)
+      :init-example-editor (memoize init-example-editor)
       :watcher (when-not js/COMPILED
                  (or watcher (init-watcher!)))))
   (when (:var-sym @*state)
