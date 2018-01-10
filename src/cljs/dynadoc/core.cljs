@@ -1,5 +1,5 @@
 (ns dynadoc.core
-  (:require [cljs.reader :refer [read-string]]
+  (:require [cljs.tools.reader :refer [read-string]]
             [rum.core :as rum]
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
