@@ -101,8 +101,18 @@
             :else ns->vars))
         ns->vars))))
 
+(defn visible? [^java.io.File f]
+  (let [n (.getName f)]
+    (or (= n ".")
+        (not (.startsWith n ".")))))
+
 (defn get-cljs-nses-and-vars []
-  (loop [files (file-seq (io/file "."))
+  (loop [files (tree-seq
+                 (fn [^java.io.File f]
+                   (and (.isDirectory f) (visible? f)))
+                 (fn [^java.io.File d]
+                   (seq (.listFiles d)))
+                 (io/file "."))
          ns->vars {}]
     (if-let [f (first files)]
       (if (and (.isFile f)
