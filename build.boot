@@ -3,14 +3,16 @@
   :dependencies '[[adzerk/boot-cljs "2.1.4" :scope "test"]
                   [adzerk/boot-reload "0.5.2" :scope "test"]
                   [org.clojure/test.check "0.9.0" :scope "test"]
-                  [nightlight "2.1.1" :scope "test"]
-                  [seancorfield/boot-tools-deps "0.1.4" :scope "test"]]
+                  [nightlight "RELEASE" :scope "test"]
+                  [seancorfield/boot-tools-deps "0.1.4" :scope "test"]
+                  [orchestra "2017.11.12-1"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")
                               :password (System/getenv "CLOJARS_PASS")}]))
 
 (require
+  '[orchestra.spec.test :refer [instrument]]
   '[clojure.edn :as edn]
   '[adzerk.boot-cljs :refer [cljs]]
   '[adzerk.boot-reload :refer [reload]]
@@ -56,10 +58,7 @@
     (reload :asset-path "dynadoc-public")
     (cljs)
     (with-pass-thru _
-      (require
-        '[dynadoc.core :refer [dev-start]]
-        '[clojure.spec.test.alpha :refer [instrument]])
-      ((resolve 'instrument))
+      (require '[dynadoc.core :refer [dev-start]])
       ((resolve 'dev-start) {:port 5000 :dev? true}))
     (target)))
 
