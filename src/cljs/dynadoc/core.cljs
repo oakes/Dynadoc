@@ -9,7 +9,7 @@
             [dynadoc.aliases])
   (:import goog.net.XhrIo))
 
-(def ^:const version "1.4.2")
+(def ^:const version "1.4.3")
 (def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
 
 (defonce *state (atom {}))
