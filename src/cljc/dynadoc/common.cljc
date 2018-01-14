@@ -23,19 +23,18 @@
          :clj (java.net.URLEncoder/encode (str var-sym) "UTF-8")))
     (when static? ".html")))
 
-(rum/defcs expandable-section < (rum/local false ::expanded?)
-  [rum-state {:keys [label url *content on-close]}]
-  (let [*expanded? (::expanded? rum-state)]
-    [:div {:class "section"}
-     [:a {:href url
-          #?@(:cljs [:on-click (fn [e]
-                                 (.preventDefault e)
-                                 (when-not (swap! *expanded? not)
-                                   (when on-close
-                                     (on-close))))])}
-      [:h3 (str (if @*expanded? "- " "+ ") label)]]
-     (when @*expanded?
-       @*content)]))
+(rum/defcs expandable-section < (rum/local false ::*expanded?)
+  [{:keys [::*expanded?] :as rum-state} {:keys [label url *content on-close]}]
+  [:div {:class "section"}
+   [:a {:href url
+        #?@(:cljs [:on-click (fn [e]
+                               (.preventDefault e)
+                               (when-not (swap! *expanded? not)
+                                 (when on-close
+                                   (on-close))))])}
+    [:h3 (str (if @*expanded? "- " "+ ") label)]]
+   (when @*expanded?
+     @*content)])
 
 (defn init-editor [rum-state]
   (let [[state] (:rum/args rum-state)]
@@ -139,10 +138,9 @@
             :url url
             :*content (delay (source->html state source))})))]))
 
-(rum/defcs sidebar  < (rum/local "" ::search)
-  [rum-state {:keys [nses cljs-started? export-filter rel-path static?]}]
-  (let [*search (::search rum-state)
-        search (or export-filter @*search)
+(rum/defcs sidebar  < (rum/local "" ::*search)
+  [{:keys [::*search] :as rum-state} {:keys [nses cljs-started? export-filter rel-path static?]}]
+  (let [search (or export-filter @*search)
         search (when (seq search)
                  (re-pattern search))]
     [:div
@@ -173,10 +171,9 @@
                       (into [:div] vars))])))
          nses))]))
 
-(rum/defcs export-form < (rum/local {} ::options)
-  [rum-state {:keys [type ns-sym var-sym export-filter exportable?]} *state]
-  (let [*options (::options rum-state)
-        {:keys [pages]
+(rum/defcs export-form < (rum/local {} ::*options)
+  [{:keys [::*options] :as rum-state} {:keys [type ns-sym var-sym export-filter exportable?]} *state]
+  (let [{:keys [pages]
          :or {pages (if ns-sym :single :multiple)}} @*options]
     [:form {:action "/dynadoc-export.zip"
             :method :get
