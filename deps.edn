@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljc" "src/cljs"]
+{:paths ["src/clj" "src/cljc" "src/cljs" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.9.0" :scope "provided"}
         org.clojure/clojurescript {:mvn/version "1.9.946"}
         paren-soup {:mvn/version "2.10.3"}
