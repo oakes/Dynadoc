@@ -5,7 +5,7 @@
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.6.3"}
         http-kit {:mvn/version "2.2.0"}
-        eval-soup {:mvn/version "1.4.1"}
+        eval-soup {:mvn/version "1.4.2"}
         rum {:mvn/version "0.11.1"}
         html-soup {:mvn/version "1.5.5"}
         org.clojure/tools.cli {:mvn/version "0.3.5"}
