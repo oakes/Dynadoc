@@ -116,7 +116,7 @@
        [:div {:class "section doc"} doc])
      (when (seq examples)
        (into [:div {:class "section"}
-              [:h2 "Example"]]
+              [:h2 (if (> (count examples) 1) "Examples" "Example")]]
          (mapv (partial example->html state)
            examples)))
      (when spec
