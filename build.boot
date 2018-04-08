@@ -24,7 +24,7 @@
                           [adzerk/boot-reload "0.5.2" :scope "test"]
                           [org.clojure/test.check "0.9.0" :scope "test"]
                           [nightlight "RELEASE" :scope "test"]
-                          [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
+                          [javax.xml.bind/jaxb-api "2.3.0" :scope "test"] ; necessary for Java 9 compatibility
                           [orchestra "2017.11.12-1" :scope "test"]]
                         dependencies)
     :repositories (conj (get-env :repositories)
