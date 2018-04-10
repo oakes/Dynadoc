@@ -6,9 +6,10 @@ This is not your father's documentation generator. Dynadoc is all about making b
 
 * See the screencast:
   *  https://www.youtube.com/watch?v=n8kPWfAlmlE
-* See the dynadocs for play-cljs, a ClojureScript game library:
-  *  https://oakes.github.io/play-cljs/
-* See the example projects for tips on how to set up Dynadoc:
+* See real uses of Dynadoc:
+  * [play-cljs](https://oakes.github.io/play-cljs/), a ClojureScript game library
+  * [edna](https://oakes.github.io/edna/cljs/edna.examples.html), a Clojure music library
+* See the minimal example projects for tips on how to set up Dynadoc:
   *  https://github.com/oakes/dynadoc-examples
 
 ### Instant docs for all Clojure(Script) dependencies
