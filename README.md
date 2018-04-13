@@ -1,5 +1,3 @@
-[![Clojars Project](https://img.shields.io/clojars/v/dynadoc.svg)](https://clojars.org/dynadoc)
-
 ## Introduction
 
 This is not your father's documentation generator. Dynadoc is all about making better documentation by combining Clojure's incredible dynamism with my inability to come up with good project names.
