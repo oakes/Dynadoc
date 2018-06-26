@@ -135,6 +135,7 @@
   (swap! *state merge
     (-> (.querySelector js/document "#initial-state")
         .-textContent
+        js/atob
         read-string))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))

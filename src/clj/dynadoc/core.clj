@@ -21,7 +21,8 @@
             [dynadoc.watch :as watch]
             [dynadoc.aliases]
             [eval-soup.core :as es]
-            [clojure.tools.cli :as cli])
+            [clojure.tools.cli :as cli]
+            [clojure.data.codec.base64 :as base64])
   (:import [java.util.zip ZipEntry ZipOutputStream]))
 
 (defonce *web-server (atom nil))
@@ -185,7 +186,10 @@
     (-> "template.html" io/resource slurp
         (str/replace "{{rel-path}}" (:rel-path state))
         (str/replace "{{content}}" (rum/render-html (common/app (atom state))))
-        (str/replace "{{initial-state}}" (pr-str state)))))
+        (str/replace "{{initial-state}}" (-> (pr-str state)
+                                             (.getBytes "UTF-8")
+                                             base64/encode
+                                             (String. "UTF-8"))))))
 
 (def public-files
   ["main.js"
