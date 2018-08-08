@@ -56,6 +56,16 @@
          (sort-by #(-> % :sym str))
          vec)))
 
+(def sym-str (comp str :sym))
+
+(def ^:dynamic ns-regex #".*")
+
+(defn filter-nses
+  [nses]
+  (->> nses
+       (filter (comp (partial re-find ns-regex)
+                     sym-str))))
+
 (defn get-cljs-nses-and-vars-dynamically []
   (when-let [*env (:*cljs-env @*options)]
     (require 'cljs.analyzer.api)
@@ -151,6 +161,7 @@
         nses (or nses
                  (->> (concat (get-clj-nses) (get-cljs-nses cljs-nses-and-vars))
                       (sort-by #(-> % :sym str))
+                      (filter-nses)
                       vec))
         vars (case type
                :clj (cond
@@ -261,10 +272,13 @@
         (let [clj-nses (get-clj-nses)
               cljs-nses-and-vars (get-cljs-nses-and-vars)
               cljs-nses (get-cljs-nses cljs-nses-and-vars)
-              nses (if-let [search (some-> export-filter re-pattern)]
-                     (filter #(re-find search (-> % :sym str))
-                       (sort-by :sym (concat clj-nses cljs-nses)))
-                     (sort-by :sym (concat clj-nses cljs-nses)))]
+              search-fn (if-let [search (some-> export-filter re-pattern)]
+                          #(re-find search (-> % :sym str))
+                          identity)
+              nses (->> (concat clj-nses cljs-nses)
+                        (filter-nses)
+                        (filter search-fn)
+                        (sort-by :sym))]
           (.putNextEntry zip (ZipEntry. "index.html"))
           (io/copy (page "/index.html"
                      {:static? true
