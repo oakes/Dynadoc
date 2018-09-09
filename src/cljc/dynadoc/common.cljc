@@ -1,7 +1,9 @@
 (ns dynadoc.common
   (:require [rum.core :as rum]
             [html-soup.core :as hs]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            #?(:clj [oakclojure.tools.reader :as rdr]
+               :cljs [oakcljs.tools.reader :as rdr])))
 
 (def ^:const page-url "https://clojars.org/dynadoc")
 
@@ -48,12 +50,16 @@
       (init (rum/dom-node rum-state) example)))
   rum-state)
 
+(defn str->html [s]
+  (try
+    (binding [rdr/*suppress-read* true]
+      (hs/code->html s))
+    (catch #?(:clj Exception :cljs js/Error) _)))
+
 (rum/defc example->html < {:after-render init-example-editor}
   [{:keys [type prod? static?] :as state}
    {:keys [id doc body-str with-card] :as example}]
-  (when-let [html (try
-                    (hs/code->html body-str)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+  (when-let [html (str->html body-str)]
     (let [hide-instarepl? (or (and (= type :cljs) prod?)
                               (and (= type :clj) static?))]
       [:div {:class "section"}
@@ -68,18 +74,14 @@
 
 (rum/defc source->html < {:after-render init-editor}
   [state source]
-  (when-let [html (try
-                    (hs/code->html source)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+  (when-let [html (str->html source)]
     [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
 (rum/defc spec->html < {:after-render init-editor}
   [state spec]
-  (when-let [html (try
-                    (hs/code->html spec)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+  (when-let [html (str->html spec)]
     [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
