@@ -1,18 +1,22 @@
 (ns dynadoc.core
-  (:require [cljs.tools.reader :refer [read-string]]
-            [rum.core :as rum]
+  (:require [rum.core :as rum]
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
             [goog.object :as gobj]
             [clojure.walk :refer [postwalk]]
-            [dynadoc.aliases])
+            [dynadoc.aliases]
+            [oakcljs.tools.reader :as rdr])
   (:import goog.net.XhrIo))
 
 (def version "1.4.10")
 (def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
 
 (defonce *state (atom {}))
+
+(defn read-string [x]
+  (binding [rdr/*suppress-read* true]
+    (rdr/read-string x)))
 
 (defn with-focus->binding [with-focus]
   (let [{:keys [binding]} with-focus
@@ -79,7 +83,7 @@
 (defn cljs-compiler-fn [example forms cb]
   (es/code->results
     (into [(list 'ns (:ns-sym @*state))]
-      (mapv (partial transform example) forms))
+          (mapv (partial transform example) forms))
     (fn [results]
       (->> results
            rest ; ignore the result of ns
