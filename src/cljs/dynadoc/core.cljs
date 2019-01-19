@@ -9,9 +9,6 @@
             [dynadoc.aliases])
   (:import goog.net.XhrIo))
 
-(def version "1.4.10")
-(def ^:const api-url "https://clojars.org/api/artifacts/dynadoc")
-
 (defonce *state (atom {}))
 
 (defn with-focus->binding [with-focus]
@@ -105,18 +102,6 @@
 (defn prod []
   (swap! *state assoc :prod? true))
 
-(defn check-version []
-  (.send XhrIo
-    api-url
-    (fn [e]
-      (when (and (.isSuccess (.-target e))
-                 (->> (.. e -target getResponseText)
-                      (.parse js/JSON)
-                      (#(gobj/get % "latest_release"))
-                      (not= version)))
-        (swap! *state assoc :update? true)))
-    "GET"))
-
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
         host (-> js/window .-location .-host)
@@ -139,9 +124,7 @@
         read-string))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
-  (let [{:keys [check-for-updates? watcher]} @*state]
-    (when check-for-updates?
-      (check-version))
+  (let [{:keys [watcher]} @*state]
     (swap! *state assoc
       :cljs-started? true
       :exportable? js/COMPILED

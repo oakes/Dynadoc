@@ -3,8 +3,6 @@
             [html-soup.core :as hs]
             [clojure.string :as str]))
 
-(def ^:const page-url "https://clojars.org/dynadoc")
-
 (defn ns-sym->url [rel-path static? type ns-sym]
   (str rel-path (name type) "/" ns-sym (when static? ".html")))
 
@@ -237,7 +235,7 @@
 
 (rum/defc app < rum/reactive [*state]
   (let [{:keys [ns-sym ns-meta var-sym vars
-                cljs-started? prod? static? hide-sidebar? update?]
+                cljs-started? prod? static? hide-sidebar?]
          :as state} (rum/react *state)]
     [:div
      (when-not hide-sidebar?
@@ -255,12 +253,6 @@
            (mapv (partial var->html state) vars))
          [:div {:class "vars"}
           (export state *state)])
-       (when update?
-         [:div {:class "footer"}
-          [:h2
-           [:a {:href page-url
-                :target "_blank"}
-            "New version of Dynadoc!"]]])
        (cond
          static?
          [:div {:class "footer"}
