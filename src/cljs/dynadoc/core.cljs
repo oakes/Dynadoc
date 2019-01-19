@@ -12,9 +12,12 @@
 (defonce *state (atom {}))
 
 (defn with-focus->binding [with-focus]
-  (let [{:keys [binding]} with-focus
-        [binding-type binding-val] binding]
-    (when (= :sym binding-type)
+  (let [form (or (:form with-focus) ;; clojure 1.10
+                 (:binding with-focus)) ;; clojure 1.9
+        [binding-type binding-val] form]
+    (when (#{:local-symbol ;; clojure 1.10
+             :sym} ;; clojure 1.9
+            binding-type)
       binding-val)))
 
 (defn add-focus [form with-focus body]
