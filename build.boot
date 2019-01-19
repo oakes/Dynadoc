@@ -20,12 +20,11 @@
   (set-env!
     :source-paths source-paths
     :resource-paths resource-paths
-    :dependencies (into '[[adzerk/boot-cljs "2.1.4" :scope "test"]
-                          [adzerk/boot-reload "0.5.2" :scope "test"]
-                          [org.clojure/test.check "0.9.0" :scope "test"]
+    :dependencies (into '[[adzerk/boot-cljs "2.1.5" :scope "test"]
+                          [adzerk/boot-reload "0.6.0" :scope "test"]
                           [nightlight "RELEASE" :scope "test"]
                           [javax.xml.bind/jaxb-api "2.3.0" :scope "test"] ; necessary for Java 9 compatibility
-                          [orchestra "2017.11.12-1" :scope "test"]]
+                          [orchestra "2018.12.06-2" :scope "test"]]
                         dependencies)
     :repositories (conj (get-env :repositories)
                     ["clojars" {:url "https://clojars.org/repo/"

@@ -1,13 +1,13 @@
 {:paths ["src/clj" "src/cljc" "src/cljs" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.9.0" :scope "provided"}
-        org.clojure/clojurescript {:mvn/version "1.10.312"}
-        paren-soup {:mvn/version "2.13.2"}
+ :deps {org.clojure/clojure {:mvn/version "1.10.0" :scope "provided"}
+        org.clojure/clojurescript {:mvn/version "1.10.439"}
+        paren-soup {:mvn/version "2.14.0"}
         defexample {:mvn/version "1.7.0"}
-        ring {:mvn/version "1.6.3"}
-        http-kit {:mvn/version "2.2.0"}
+        ring {:mvn/version "1.7.1"}
+        http-kit {:mvn/version "2.3.0"}
         eval-soup {:mvn/version "1.4.3"}
-        rum {:mvn/version "0.11.2"}
-        html-soup {:mvn/version "1.5.6"}
+        rum {:mvn/version "0.11.3"}
+        html-soup {:mvn/version "1.6.0"}
         org.clojure/tools.cli {:mvn/version "0.3.5"}
         hawk {:mvn/version "0.2.11"}
         org.clojure/data.codec {:mvn/version "0.1.1"}}}
