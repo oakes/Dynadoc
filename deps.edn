@@ -1,7 +1,7 @@
 {:paths ["src/clj" "src/cljc" "src/cljs" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.0" :scope "provided"}
         org.clojure/clojurescript {:mvn/version "1.10.439"}
-        paren-soup {:mvn/version "2.14.0"}
+        paren-soup {:mvn/version "2.14.2"}
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.7.1"}
         http-kit {:mvn/version "2.3.0"}
