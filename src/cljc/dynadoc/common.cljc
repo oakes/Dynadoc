@@ -140,7 +140,8 @@
   [{:keys [::*search] :as rum-state} {:keys [nses cljs-started? export-filter rel-path static?]}]
   (let [search (or export-filter @*search)
         search (when (seq search)
-                 (re-pattern search))]
+                 (try (re-pattern search)
+                   (catch #?(:clj Exception :cljs js/Error) _)))]
     [:div
      (when cljs-started?
        [:input {:class "search"
