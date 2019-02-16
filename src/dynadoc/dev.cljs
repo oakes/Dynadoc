@@ -1,7 +1,6 @@
 (ns dynadoc.dev
-  (:require [dynadoc.core :as c]
+  (:require [dynadoc.core]
             [dynadoc.examples]
             [orchestra-cljs.spec.test :as st]))
 
 (st/instrument)
-(c/init)

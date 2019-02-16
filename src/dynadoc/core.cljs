@@ -136,3 +136,5 @@
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block"))))
 
+(init)
+
