@@ -2,6 +2,7 @@
  :deps {paren-soup {:mvn/version "2.14.3"}
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.7.1"}
+        org.eclipse.jetty/jetty-server {:mvn/version "9.4.12.v20180830"}
         org.eclipse.jetty.websocket/websocket-servlet {:mvn/version "9.4.12.v20180830"}
         org.eclipse.jetty.websocket/websocket-server {:mvn/version "9.4.12.v20180830"}
         http-kit {:mvn/version "2.3.0"}
