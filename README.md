@@ -41,8 +41,8 @@ If you want your ClojureScript examples to be interactive, you will also need to
 ## Development
 
 * Install [the Clojure CLI tool](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
-* To develop with figwheel: `clj -A:dev dev.clj`
-* To build the release version: `clj -A:prod prod.clj install`
+* To develop with figwheel: `clj -A:dev:cljs dev.clj`
+* To build the release version: `clj -A:prod:cljs prod.clj install`
 
 ## Licensing
 
