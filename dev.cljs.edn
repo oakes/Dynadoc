@@ -1,0 +1,5 @@
+{:main          dynadoc.dev
+ :optimizations :none
+ :output-to     "target-js/dynadoc-public/main.js"
+ :output-dir    "target/dynadoc-public/main.out"
+ :asset-path    "/main.out"}

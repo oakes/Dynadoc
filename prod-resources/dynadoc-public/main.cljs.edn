@@ -1,3 +1,0 @@
-{:require  [dynadoc.core]
- :init-fns [dynadoc.core/prod]
- :compiler-options {:optimizations :advanced}}

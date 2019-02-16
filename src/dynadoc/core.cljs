@@ -102,9 +102,6 @@
                                (partial clj-compiler-fn example)
                                (partial cljs-compiler-fn example))}))))
 
-(defn prod []
-  (swap! *state assoc :prod? true))
-
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
         host (-> js/window .-location .-host)
@@ -138,6 +135,4 @@
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block"))))
-
-(init)
 

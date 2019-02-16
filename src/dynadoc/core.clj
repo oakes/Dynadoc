@@ -6,11 +6,10 @@
             [clojure.walk :as walk]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.file :refer [wrap-file]]
-            [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.util.response :refer [redirect not-found]]
+            [ring.util.response :refer [not-found]]
             [ring.util.request :refer [body-string]]
             [org.httpkit.server :refer [run-server send!]]
             [rum.core :as rum]
@@ -367,8 +366,8 @@
 (defn dev-start [opts]
   (when-not @*web-server
     (.mkdirs (io/file "target" "dynadoc-public"))
-    (start (-> #'handler
-               (wrap-reload)
+    (start (-> handler
+               (wrap-resource "dynadoc-public")
                (wrap-file "target/dynadoc-public"))
       opts)))
 

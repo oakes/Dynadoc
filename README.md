@@ -38,6 +38,12 @@ Please see [the example projects](https://github.com/oakes/dynadoc-examples) for
 
 If you want your ClojureScript examples to be interactive, you will also need to rebuild Dynadoc's frontend. To do this, you'll need to create a build configuration with these compiler options: `:output-to "resources/dynadoc-extend/main.js" :optimizations :simple`. The example repo contains both Lein and Boot projects that do this.
 
+## Development
+
+* Install [the Clojure CLI tool](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools)
+* To develop with figwheel: `clj -A:dev dev.clj`
+* To build the release version: `clj -A:prod prod.clj install`
+
 ## Licensing
 
 All files that originate from this project are dedicated to the public domain. I would love pull requests, and will assume that they are also dedicated to the public domain.

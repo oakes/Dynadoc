@@ -1,4 +1,0 @@
-{:require  [nightlight.repl-server dynadoc.examples dynadoc.core]
- :init-fns [orchestra-cljs.spec.test/instrument]
- :compiler-options {:optimizations :none
-                    :asset-path "/main.out"}}

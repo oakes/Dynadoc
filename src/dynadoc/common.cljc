@@ -50,8 +50,9 @@
   [{:keys [type prod? static?] :as state}
    {:keys [id doc body-str with-card] :as example}]
   (when-let [html (try
-                    (hs/code->html body-str)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+                    (hs/code->html (str body-str \newline))
+                    (catch #?(:clj Exception :cljs js/Error) e
+                      (println e)))]
     (let [hide-instarepl? (or (and (= type :cljs) prod?)
                               (and (= type :clj) static?))]
       [:div {:class "section"}
@@ -67,8 +68,9 @@
 (rum/defc source->html < {:after-render init-editor}
   [state source]
   (when-let [html (try
-                    (hs/code->html source)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+                    (hs/code->html (str source \newline))
+                    (catch #?(:clj Exception :cljs js/Error) e
+                      (println e)))]
     [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
@@ -76,8 +78,9 @@
 (rum/defc spec->html < {:after-render init-editor}
   [state spec]
   (when-let [html (try
-                    (hs/code->html spec)
-                    (catch #?(:clj Exception :cljs js/Error) _))]
+                    (hs/code->html (str spec \newline))
+                    (catch #?(:clj Exception :cljs js/Error) e
+                      (println e)))]
     [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
@@ -141,7 +144,8 @@
   (let [search (or export-filter @*search)
         search (when (seq search)
                  (try (re-pattern search)
-                   (catch #?(:clj Exception :cljs js/Error) _)))]
+                   (catch #?(:clj Exception :cljs js/Error) e
+                     (println e))))]
     [:div
      (when cljs-started?
        [:input {:class "search"
