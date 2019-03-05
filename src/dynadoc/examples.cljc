@@ -1,5 +1,5 @@
 (ns dynadoc.examples
-  (:require-macros [dynadoc.example :refer [defexample defexamples]]))
+  (#?(:clj :require :cljs :require-macros) [dynadoc.example :refer [defexample defexamples]]))
 
 (defexamples dynadoc.core/form->serializable
   [{:doc "This is a test example"

@@ -22,7 +22,9 @@
   (let [reader (indexing-push-back-reader (slurp f))]
     (loop [current-ns nil
            ns->vars ns->vars]
-      (if-let [form (try (r/read {:eof nil} reader)
+      (if-let [form (try
+                      (binding [r/*suppress-read* true]
+                        (r/read {:read-cond :preserve :eof nil} reader))
                       (catch Exception _ '(comment "Reader error")))]
         (recur
           (if (and (list? form)
@@ -116,7 +118,8 @@
          ns->vars {}]
     (if-let [f (first files)]
       (if (and (.isFile f)
-               (-> f .getName (.endsWith ".cljs")))
+               (or (-> f .getName (.endsWith ".cljs"))
+                   (-> f .getName (.endsWith ".cljc"))))
         (recur
           (rest files)
           (try
