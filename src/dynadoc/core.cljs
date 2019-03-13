@@ -1,5 +1,5 @@
 (ns dynadoc.core
-  (:require [cljs.tools.reader :refer [read-string]]
+  (:require [cljs.tools.reader :as r]
             [rum.core :as rum]
             [dynadoc.common :as common]
             [paren-soup.core :as ps]
@@ -8,6 +8,10 @@
             [clojure.walk :refer [postwalk]]
             [dynadoc.aliases])
   (:import goog.net.XhrIo))
+
+(defn read-string [s]
+  (binding [r/*suppress-read* true]
+    (r/read-string {:read-cond :preserve :eof nil} s)))
 
 (defonce *state (atom {}))
 
