@@ -23,7 +23,8 @@
     (loop [current-ns nil
            ns->vars ns->vars]
       (if-let [form (try
-                      (binding [r/*suppress-read* true]
+                      (binding [r/*suppress-read* true
+                                *ns* current-ns]
                         (r/read {:read-cond :preserve :eof nil} reader))
                       (catch Exception _ '(comment "Reader error")))]
         (recur
