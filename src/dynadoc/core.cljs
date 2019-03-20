@@ -2,11 +2,10 @@
   (:require [cljs.tools.reader :as r]
             [rum.core :as rum]
             [dynadoc.common :as common]
+            [dynadoc.transform :as transform]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
-            [goog.object :as gobj]
-            [clojure.walk :refer [postwalk]]
-            [dynadoc.aliases])
+            [goog.object :as gobj])
   (:import goog.net.XhrIo))
 
 (defn read-string [s]
@@ -15,44 +14,9 @@
 
 (defonce *state (atom {}))
 
-(defn with-focus->binding [with-focus]
-  (let [form (or (:form with-focus) ;; clojure 1.10
-                 (:binding with-focus)) ;; clojure 1.9
-        [binding-type binding-val] form]
-    (when (#{:local-symbol ;; clojure 1.10
-             :sym} ;; clojure 1.9
-            binding-type)
-      binding-val)))
-
-(defn add-focus [form with-focus body]
-  (if-let [binding (with-focus->binding with-focus)]
-    (postwalk
-      (fn [x]
-        (if (= x binding)
-          form
-          x))
-      body)
-    form))
-
-(defn add-card [form with-card id]
-  (list 'let [with-card (list '.getElementById 'js/document id)] form))
-
-(defn add-callback [form with-callback]
-  (list 'let ['es-channel '(dynadoc.aliases/chan)
-              with-callback '(fn [data]
-                               (dynadoc.aliases/put! es-channel data))]
-    form
-    '(dynadoc.aliases/<!! es-channel)))
-
-(defn transform [{:keys [body id with-focus with-card with-callback]} form-str]
+(defn transform [{:keys [with-focus with-card with-callback] :as ex} form-str]
   (if (or with-focus with-card with-callback)
-    (cond-> (read-string form-str)
-            (some? with-focus)
-            (add-focus with-focus body)
-            (some? with-card)
-            (add-card with-card id)
-            (some? with-callback)
-            (add-callback with-callback))
+    (transform/transform ex (read-string form-str))
     form-str))
 
 (defn clj-compiler-fn [example forms cb]
