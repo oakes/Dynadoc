@@ -54,7 +54,8 @@
            (mapv form->serializable)
            cb))
     {:custom-load (fn [opts cb]
-                    (cb {:lang :clj :source ""}))}))
+                    (cb {:lang :clj :source ""}))
+     :disable-timeout? true}))
 
 (defn init-editor [elem]
   (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
