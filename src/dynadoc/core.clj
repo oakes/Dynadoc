@@ -273,7 +273,9 @@
               nses (if-let [search (some-> export-filter re-pattern)]
                      (filter #(re-find search (-> % :sym str))
                        (sort-by :sym (concat clj-nses cljs-nses)))
-                     (sort-by :sym (concat clj-nses cljs-nses)))]
+                     (sort-by :sym (concat clj-nses cljs-nses)))
+              dedupe-pref (:dedupe-pref @*options)
+              nses (cond->> nses dedupe-pref (dedupe-nses dedupe-pref))]
           (.putNextEntry zip (ZipEntry. "index.html"))
           (io/copy (page "/index.html"
                      {:static? true
