@@ -140,7 +140,7 @@
             :*content (delay (source->html state source))})))]))
 
 (rum/defcs sidebar  < (rum/local "" ::*search)
-  [{:keys [::*search] :as rum-state} {:keys [nses cljs-started? export-filter rel-path static?]}]
+  [{:keys [::*search] :as rum-state} {:keys [nses cljs-started? export-filter rel-path static? hide-badge?]}]
   (let [search (or export-filter @*search)
         search (when (seq search)
                  (try (re-pattern search)
@@ -166,7 +166,7 @@
                            (re-find search (str sym))
                            (seq vars))
                    [:div
-                    (when (= type :cljs)
+                    (when (and (= type :cljs) (not hide-badge?))
                       [:div {:class "tag"} "CLJS"])
                     [:a {:href (ns-sym->url rel-path static? type sym)}
                      (str sym)]

@@ -145,10 +145,24 @@
          {})
        (var-map->vars ns-sym)))
 
+(defn dedupe-nses [pref nses]
+  (reduce-kv
+    (fn [nses sym nses-for-sym]
+      (conj nses
+            (or (first (filter #(= pref (:type %)) nses-for-sym))
+                (first nses-for-sym))))
+    []
+  (group-by :sym nses)))
+
 (defn page-state [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
   (let [cljs-nses-and-vars (or cljs-nses-and-vars (get-cljs-nses-and-vars))
+        dedupe-pref (:dedupe-pref @*options)
+        dedupe-fn (if dedupe-pref
+                    (partial dedupe-nses dedupe-pref)
+                    identity)
         nses (or nses
                  (->> (concat (get-clj-nses) (get-cljs-nses cljs-nses-and-vars))
+                      dedupe-fn
                       (sort-by #(-> % :sym str))
                       vec))
         vars (case type
@@ -173,7 +187,8 @@
          :ns-meta (when (= type :clj)
                     (some-> ns-sym the-ns meta))
          :vars vars
-         :rel-path rel-path})))
+         :rel-path rel-path
+         :hide-badge? (some? dedupe-pref)})))
 
 (defn page [uri opts]
   (let [state (page-state uri opts)]
