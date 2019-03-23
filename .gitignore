@@ -2,6 +2,7 @@ hs_err_pid*.log
 pom.xml
 pom.xml.asc
 target/
-target-js/
+resources/dynadoc-public/*.js
+resources/dynadoc-public/*.out
 .*
 !.gitignore

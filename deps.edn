@@ -1,4 +1,4 @@
-{:paths ["src" "resources" "target-js"]
+{:paths ["src" "resources"]
  :deps {paren-soup {:mvn/version "2.14.3"}
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.7.1"}
@@ -15,6 +15,5 @@
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.520"}}}
            :dev {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.0"}
                               orchestra {:mvn/version "2018.12.06-2"}
-                              expound {:mvn/version "0.7.2"}}
-                 :extra-paths ["target"]}
+                              expound {:mvn/version "0.7.2"}}}
            :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}}}}
