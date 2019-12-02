@@ -1,5 +1,5 @@
 {:paths ["src" "resources"]
- :deps {paren-soup {:mvn/version "2.15.6"}
+ :deps {paren-soup {:mvn/version "2.16.0"}
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.7.1"}
         org.eclipse.jetty/jetty-server {:mvn/version "9.4.12.v20180830"}
