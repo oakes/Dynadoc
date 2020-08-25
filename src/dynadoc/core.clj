@@ -27,6 +27,11 @@
 (defonce *web-server (atom nil))
 (defonce *options (atom nil))
 
+(defn exclude-var? [ns-sym var-sym]
+  (or (str/includes? (name var-sym) ".proxy$")
+      (contains? (:exclusions @*options)
+                 (symbol (name ns-sym) (name var-sym)))))
+
 (defn get-examples
   ([ns-sym var-sym]
    (let [examples (get-in @ex/registry-ref [ns-sym var-sym])]
@@ -105,6 +110,7 @@
 
 (defn get-cljs-vars [cljs-nses-and-vars ns]
   (->> (get cljs-nses-and-vars ns)
+       (remove #(exclude-var? ns (:sym %)))
        (sort-by #(-> % :sym str))
        vec))
 
@@ -139,9 +145,10 @@
        keys
        (reduce
          (fn [m var-sym]
-           (if (str/includes? (name var-sym) ".proxy$")
-             m
-             (assoc m var-sym (get-clj-var-info ns-sym var-sym))))
+           (let [var-info (get-clj-var-info ns-sym var-sym)]
+             (if (exclude-var? ns-sym var-sym)
+               m
+               (assoc m var-sym var-info))))
          {})
        (var-map->vars ns-sym)))
 
