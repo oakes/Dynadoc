@@ -375,6 +375,3 @@
        first
        (or (throw (ex-info "State not found" {})))))
 
-(rum/defc app []
-  (app-root {}))
-

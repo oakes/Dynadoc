@@ -92,7 +92,7 @@
        js/atob
        read-string
        (common/update-session! ::common/server))
-  (rum/mount (common/app)
+  (rum/mount (common/app-root {})
     (.querySelector js/document "#app"))
   (let [{:keys [var-sym watcher]} (common/get-state)]
     (->> {::common/cljs-started? true
