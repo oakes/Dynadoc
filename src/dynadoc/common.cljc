@@ -150,8 +150,7 @@
                      (println e))))]
     [:div
      (when cljs-started?
-       [:input {:value ""
-                :class "search"
+       [:input {:class "search"
                 :on-change #(->> % .-target .-value (reset! *search))
                 :placeholder "Search"}])
      (into [:div {:class "nses"}
@@ -209,11 +208,12 @@
                    "down with the following regex:"
                    [:div
                     [:input {:type "text"
+                             :value ""
                              :placeholder "Export filter"
                              :style {:margin 5 :font-size 14}
                              :on-change #(->> % .-target .-value
                                               (swap! *state assoc :export-filter))}]]])]
-     [:input {:type "hidden" :name "export-filter" :value export-filter}]
+     [:input {:type "hidden" :name "export-filter" :value (or export-filter "")}]
      (when type
        [:input {:type "hidden" :name "type" :value (name type)}])
      (when ns-sym
