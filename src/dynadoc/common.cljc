@@ -91,7 +91,7 @@
 
 (def components
   (orum/ruleset
-    {::app-root
+    {app-root
      [:what
       [::server ::ns-sym ns-sym]
       [::server ::ns-meta ns-meta]
@@ -132,7 +132,7 @@
                  :target "_blank"}
              "Dynadoc"]]))]]
 
-     ::var->html
+     var->html
      [:what
       [::server ::ns-sym ns-sym]
       [::server ::var-sym var-sym]
@@ -191,7 +191,7 @@
                 :url url
                 :*content (delay (source->html source))})))])]
 
-     ::example->html
+     example->html
      [:what
       [::server ::type type]
       [::client ::prod? prod?]
@@ -200,19 +200,19 @@
       :then
       (example->html* o/*match* (orum/prop))]
 
-     ::source->html
+     source->html
      [:what
       [::client ::init-editor init-editor]
       :then
       (source->html* o/*match* (orum/prop))]
 
-     ::spec->html
+     spec->html
      [:what
       [::client ::init-editor init-editor]
       :then
       (spec->html* o/*match* (orum/prop))]
      
-     ::export
+     export
      [:what
       [::client ::cljs-started? cljs-started?]
       [::server ::static? static?]
@@ -232,7 +232,7 @@
                                        o/fire-rules)))})])
          [:div {:style {:clear "right"}}]])]
      
-     ::export-form
+     export-form
      [:what
       [::server ::ns-sym ns-sym]
       [::server ::ns-meta ns-meta]
@@ -296,7 +296,7 @@
             [:div [:b "You built Dynadoc with :optimizations set to :none"]]
             [:div [:b "You must set it to :simple in order to export"]]])])]
 
-     ::sidebar
+     sidebar
      [:what
       [::server ::nses nses]
       [::client ::cljs-started? cljs-started?]
