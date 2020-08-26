@@ -141,41 +141,6 @@
             :url url
             :*content (delay (source->html state source))})))]))
 
-(rum/defcs sidebar  < (rum/local "" ::*search)
-  [{:keys [::*search] :as rum-state} {:keys [nses cljs-started? export-filter rel-path static? hide-badge?]}]
-  (let [search (or export-filter @*search)
-        search (when (seq search)
-                 (try (re-pattern search)
-                   (catch #?(:clj Exception :cljs js/Error) e
-                     (println e))))]
-    [:div
-     (when cljs-started?
-       [:input {:class "search"
-                :on-change #(->> % .-target .-value (reset! *search))
-                :placeholder "Search"}])
-     (into [:div {:class "nses"}
-            (when (seq export-filter)
-              [:i "Pages to export:"])]
-       (keep (fn [{:keys [sym type var-syms]}]
-               (let [vars (when (and search (empty? export-filter))
-                            (->> var-syms
-                                 (filter #(re-find search (str %)))
-                                 (mapv (fn [var-sym]
-                                         [:div {:class "var"}
-                                          [:a {:href (var-sym->url rel-path static? type sym var-sym)}
-                                           (str var-sym)]]))))]
-                 (when (or (nil? search)
-                           (re-find search (str sym))
-                           (seq vars))
-                   [:div
-                    (when (and (= type :cljs) (not hide-badge?))
-                      [:div {:class "tag"} "CLJS"])
-                    [:a {:href (ns-sym->url rel-path static? type sym)}
-                     (str sym)]
-                    (when (seq vars)
-                      (into [:div] vars))])))
-         nses))]))
-
 (def rules
   (o/ruleset
     {::get-server-state
@@ -305,7 +270,51 @@
          (when-not exportable?
            [:div {:style {:margin 10 :font-size 14}}
             [:div [:b "You built Dynadoc with :optimizations set to :none"]]
-            [:div [:b "You must set it to :simple in order to export"]]])])]}))
+            [:div [:b "You must set it to :simple in order to export"]]])])]
+
+     ::sidebar
+     [:what
+      [::server ::nses nses]
+      [::client ::cljs-started? cljs-started?]
+      [::server ::rel-path rel-path]
+      [::server ::static? static?]
+      [::server ::hide-badge? hide-badge?]
+      :then
+      (let [state (orum/prop)
+            export-filter (:export-filter state)
+            *search (orum/atom "")
+            search (or export-filter @*search)
+            search (when (seq search)
+                     (try (re-pattern search)
+                       (catch #?(:clj Exception :cljs js/Error) e
+                         (println e))))]
+        [:div
+         (when cljs-started?
+           [:input {:class "search"
+                    :on-change #(->> % .-target .-value (reset! *search))
+                    :placeholder "Search"}])
+         (into [:div {:class "nses"}
+                (when (seq export-filter)
+                  [:i "Pages to export:"])]
+           (keep (fn [{:keys [sym type var-syms]}]
+                   (let [vars (when (and search (empty? export-filter))
+                                (->> var-syms
+                                     (filter #(re-find search (str %)))
+                                     (mapv (fn [var-sym]
+                                             [:div {:class "var"}
+                                              [:a {:href (var-sym->url rel-path static? type sym var-sym)}
+                                               (str var-sym)]]))))]
+                     (when (or (nil? search)
+                               (re-find search (str sym))
+                               (seq vars))
+                       [:div
+                        (when (and (= type :cljs) (not hide-badge?))
+                          [:div {:class "tag"} "CLJS"])
+                        [:a {:href (ns-sym->url rel-path static? type sym)}
+                         (str sym)]
+                        (when (seq vars)
+                          (into [:div] vars))])))
+             nses))])]}))
 
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
