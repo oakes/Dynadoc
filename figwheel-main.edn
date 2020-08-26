@@ -1,2 +1,3 @@
 {:open-url "http://localhost:5000/cljs/dynadoc.examples"
- :css-dirs ["resources/dynadoc-public"]}
+ :css-dirs ["resources/dynadoc-public"]
+ :clean-outputs true}
