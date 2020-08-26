@@ -5,7 +5,8 @@
             [dynadoc.transform :as transform]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
-            [goog.object :as gobj])
+            [goog.object :as gobj]
+            [odoyle.rules :as o])
   (:import goog.net.XhrIo))
 
 (defn read-string [s]
@@ -86,11 +87,13 @@
     sock))
 
 (defn init []
-  (swap! *state merge
-    (-> (.querySelector js/document "#initial-state")
-        .-textContent
-        js/atob
-        read-string))
+  (->> (.querySelector js/document "#initial-state")
+       .-textContent
+       js/atob
+       read-string
+       (swap! *state merge)
+       common/init-session)
+  (println "constants:" (o/query-all @common/*session ::common/get-constants))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
   (let [{:keys [watcher]} @*state]

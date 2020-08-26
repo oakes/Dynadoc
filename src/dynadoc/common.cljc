@@ -1,7 +1,8 @@
 (ns dynadoc.common
   (:require [rum.core :as rum]
             [html-soup.core :as hs]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [odoyle.rules :as o]))
 
 (defn ns-sym->url [rel-path static? type ns-sym]
   (str rel-path (name type) "/" ns-sym (when static? ".html")))
@@ -271,4 +272,22 @@
           [:a {:href "https://github.com/oakes/Dynadoc"
                :target "_blank"}
            "Dynadoc"]]))]))
+
+(def rules
+  (o/ruleset
+    {::get-constants
+     [:what
+      [::constant ::ns-sym ns-sym]
+      [::constant ::var-sym var-sym]]}))
+
+(def *session
+  (-> (reduce o/add-rule (o/->session) rules)
+      atom))
+
+(defn init-session [state]
+  (swap! *session
+         (fn [session]
+           (-> session
+               (o/insert ::constant ::ns-sym (:ns-sym state))
+               (o/insert ::constant ::var-sym (:var-sym state))))))
 
