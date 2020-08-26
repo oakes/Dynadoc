@@ -200,6 +200,7 @@
 
 (defn page [uri opts]
   (let [state (page-state uri opts)]
+    (common/update-session! ::common/server state)
     (-> "template.html" io/resource slurp
         (str/replace "{{rel-path}}" (::common/rel-path state))
         (str/replace "{{content}}" (rum/render-html (common/app)))

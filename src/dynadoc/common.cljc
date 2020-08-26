@@ -104,7 +104,7 @@
       :then
       [:div
        (when-not hide-sidebar?
-         (sidebar))
+         (sidebar {}))
        (conj
          (if ns-sym
            (into [:div {:class "vars"
