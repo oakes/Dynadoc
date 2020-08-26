@@ -250,7 +250,7 @@
       [::server ::static? static?]
       [::server ::hide-sidebar? hide-sidebar?]
       :then
-      (let [*state (orum/props)
+      (let [*state (orum/prop)
             state @*state]
         [:div
          (when-not hide-sidebar?
@@ -287,7 +287,7 @@
       [::client ::cljs-started? cljs-started?]
       [::server ::static? static?]
       :then
-      (let [*state (orum/props)
+      (let [*state (orum/prop)
             state @*state]
         (when-not static?
           [:div {:style {:min-height 75}}
