@@ -314,7 +314,8 @@
       [::client ::export-filter export-filter]
       :then
       (let [*search (orum/atom "")
-            search (or export-filter @*search)
+            search (or (not-empty export-filter)
+                       @*search)
             search (when (seq search)
                      (try (re-pattern search)
                        (catch #?(:clj Exception :cljs js/Error) e
