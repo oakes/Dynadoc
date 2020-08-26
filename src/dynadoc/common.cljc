@@ -349,7 +349,7 @@
       [::server ::type type]
       [::client ::watcher watcher]]}))
 
-(defonce *session
+(def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
       (o/insert ::client ::prod? false)
       (o/insert ::client ::cljs-started? false)
@@ -367,8 +367,7 @@
                (fn [session k v]
                  (o/insert session id k v))
                session
-               state))))
-  state)
+               state)))))
 
 (defn get-state []
   (-> @*session
