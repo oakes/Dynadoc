@@ -48,8 +48,8 @@
       (init (rum/dom-node rum-state) example)))
   rum-state)
 
-(rum/defc example->html < {:after-render init-example-editor}
-  [{:keys [type prod? static?] :as state}
+(rum/defc example->html* < {:after-render init-example-editor}
+  [{:keys [type prod? static?] :as match}
    {:keys [id doc body-str with-card] :as example}]
   (when-let [html (try
                     (hs/code->html (str body-str \newline))
@@ -67,7 +67,7 @@
         [:div {:class "content"
                :dangerouslySetInnerHTML {:__html html}}]]])))
 
-(rum/defc source->html < {:after-render init-editor}
+(rum/defc source->html* < {:after-render init-editor}
   [state source]
   (when-let [html (try
                     (hs/code->html (str source \newline))
@@ -77,7 +77,7 @@
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
-(rum/defc spec->html < {:after-render init-editor}
+(rum/defc spec->html* < {:after-render init-editor}
   [state spec]
   (when-let [html (try
                     (hs/code->html (str spec \newline))
@@ -86,60 +86,6 @@
     [:div {:class "paren-soup"}
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
-
-(rum/defc var->html
-  [{:keys [ns-sym var-sym type rel-path static?] :as state}
-   {:keys [sym meta source spec examples methods protocol]}]
-  (let [{:keys [arglists doc]} meta
-        url (var-sym->url rel-path static? type ns-sym sym)]
-    [:div {:class "var-info"}
-     (into (if var-sym
-             [:div]
-             [:a {:href url}])
-       (if arglists
-         (map (fn [arglist]
-                [:h2 (pr-str (apply list sym arglist))])
-           arglists)
-         [[:h2 (str sym)]]))
-     (when methods
-       [:div {:class "section"}
-        [:h3 "Methods in this protocol"]
-        (into [:ul]
-          (for [method-sym methods]
-            [:li [:a {:href (var-sym->url rel-path static? type ns-sym method-sym)}
-                  (str method-sym)]]))])
-     (when protocol
-       [:div {:class "section"}
-        [:h3
-         "Part of the "
-         [:a {:href (var-sym->url rel-path static? type ns-sym protocol)}
-          (str protocol)]
-         " protocol"]])
-     (when doc
-       [:div {:class "section doc"} doc])
-     (when (seq examples)
-       (into [:div {:class "section"}
-              [:h2 (if (> (count examples) 1) "Examples" "Example")]]
-         (mapv (partial example->html state)
-           examples)))
-     (when spec
-       (if var-sym
-         [:div {:class "section"}
-          [:h2 "Spec"]
-          (spec->html state spec)]
-         (expandable-section
-           {:label "Spec"
-            :url url
-            :*content (delay (spec->html state spec))})))
-     (when source
-       (if var-sym
-         [:div {:class "section"}
-          [:h2 "Source"]
-          (source->html state source)]
-         (expandable-section
-           {:label "Source"
-            :url url
-            :*content (delay (source->html state source))})))]))
 
 (def rules
   (o/ruleset
@@ -177,7 +123,7 @@
                        [:center [:h1 (str ns-sym)]]
                        (when-let [doc (:doc ns-meta)]
                          [:div {:class "section doc"} doc])])]
-               (mapv (partial var->html state) vars))
+               (mapv var->html vars))
              [:div {:class "vars"}
               (export *state)])
            (cond
@@ -193,6 +139,86 @@
               [:a {:href "https://github.com/oakes/Dynadoc"
                    :target "_blank"}
                "Dynadoc"]]))])]
+
+     ::var->html
+     [:what
+      [::server ::ns-sym ns-sym]
+      [::server ::var-sym var-sym]
+      [::server ::type type]
+      [::server ::rel-path rel-path]
+      [::server ::static? static?]
+      :then
+      (let [{:keys [sym meta source spec examples methods protocol]} (orum/prop)
+            {:keys [arglists doc]} meta
+            url (var-sym->url rel-path static? type ns-sym sym)]
+        [:div {:class "var-info"}
+         (into (if var-sym
+                 [:div]
+                 [:a {:href url}])
+           (if arglists
+             (map (fn [arglist]
+                    [:h2 (pr-str (apply list sym arglist))])
+               arglists)
+             [[:h2 (str sym)]]))
+         (when methods
+           [:div {:class "section"}
+            [:h3 "Methods in this protocol"]
+            (into [:ul]
+              (for [method-sym methods]
+                [:li [:a {:href (var-sym->url rel-path static? type ns-sym method-sym)}
+                      (str method-sym)]]))])
+         (when protocol
+           [:div {:class "section"}
+            [:h3
+             "Part of the "
+             [:a {:href (var-sym->url rel-path static? type ns-sym protocol)}
+              (str protocol)]
+             " protocol"]])
+         (when doc
+           [:div {:class "section doc"} doc])
+         (when (seq examples)
+           (into [:div {:class "section"}
+                  [:h2 (if (> (count examples) 1) "Examples" "Example")]]
+             (mapv example->html examples)))
+         (when spec
+           (if var-sym
+             [:div {:class "section"}
+              [:h2 "Spec"]
+              (spec->html spec)]
+             (expandable-section
+               {:label "Spec"
+                :url url
+                :*content (delay (spec->html spec))})))
+         (when source
+           (if var-sym
+             [:div {:class "section"}
+              [:h2 "Source"]
+              (source->html source)]
+             (expandable-section
+               {:label "Source"
+                :url url
+                :*content (delay (source->html source))})))])]
+
+     ::example->html
+     [:what
+      [::server ::type type]
+      [::client ::prod? prod?]
+      [::server ::static? static?]
+      [::client ::init-example-editor init-example-editor]
+      :then
+      (example->html* o/*match* (orum/prop))]
+
+     ::source->html
+     [:what
+      [::client ::init-editor init-editor]
+      :then
+      (source->html* o/*match* (orum/prop))]
+
+     ::spec->html
+     [:what
+      [::client ::init-editor init-editor]
+      :then
+      (spec->html* o/*match* (orum/prop))]
      
      ::export
      [:what

@@ -1,5 +1,13 @@
 (ns dynadoc.examples
-  (#?(:clj :require :cljs :require-macros) [dynadoc.example :refer [defexample defexamples]]))
+  (:require #?(:clj [dynadoc.example :refer [defexample defexamples]])
+            [clojure.spec.alpha :as s])
+  #?(:cljs (:require-macros [dynadoc.example :refer [defexample defexamples]])))
+
+(s/fdef add
+  :args (s/cat :n1 number? :n2 number?))
+
+(defn add [n1 n2]
+  (+ n1 n2))
 
 (defexamples dynadoc.core/form->serializable
   [{:doc "This is a test example"
