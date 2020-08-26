@@ -87,15 +87,6 @@
      [:div {:class "content"
             :dangerouslySetInnerHTML {:__html html}}]]))
 
-(def rules
-  (o/ruleset
-    {::get-state
-     [:what
-      [::server ::ns-sym ns-sym]
-      [::server ::var-sym var-sym]
-      [::server ::type type]
-      [::client ::watcher watcher]]}))
-
 (declare *session)
 
 (def components
@@ -348,6 +339,15 @@
                         (when (seq vars)
                           (into [:div] vars))])))
              nses))])]}))
+
+(def rules
+  (o/ruleset
+    {::get-state
+     [:what
+      [::server ::ns-sym ns-sym]
+      [::server ::var-sym var-sym]
+      [::server ::type type]
+      [::client ::watcher watcher]]}))
 
 (defonce *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
