@@ -20,7 +20,7 @@
     form-str))
 
 (defn clj-compiler-fn [example forms cb]
-  (let [ns-sym (:ns-sym (common/get-constants))]
+  (let [ns-sym (:ns-sym (common/get-server-state))]
     (try
       (.send XhrIo
         "/eval"
@@ -46,7 +46,7 @@
     (pr-str form)))
 
 (defn cljs-compiler-fn [example forms cb]
-  (let [ns-sym (:ns-sym (common/get-constants))]
+  (let [ns-sym (:ns-sym (common/get-server-state))]
     (es/code->results
       (into [(list 'ns ns-sym)]
         (mapv (partial transform example) forms))
@@ -68,11 +68,18 @@
   (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
     (when-let [content (.querySelector paren-soup ".content")]
       (set! (.-contentEditable content) true))
-    (let [type (:type (common/get-constants))]
+    (let [type (:type (common/get-server-state))]
       (ps/init paren-soup
         (js->clj {:compiler-fn (if (= :clj type)
                                  (partial clj-compiler-fn example)
                                  (partial cljs-compiler-fn example))})))))
+
+(defn strip-nses [state]
+  (reduce-kv
+    (fn [m k v]
+      (assoc m (keyword (name k)) v))
+    {}
+    state))
 
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
@@ -83,8 +90,11 @@
         (.send sock js/window.location.pathname)))
     (set! (.-onmessage sock)
       (fn [event]
+        (println "hey")
         (->> (.-data event)
              read-string
+             common/update-session
+             strip-nses
              (swap! *state merge))))
     sock))
 
@@ -93,8 +103,9 @@
        .-textContent
        js/atob
        read-string
-       (swap! *state merge)
-       common/init-session)
+       common/update-session
+       strip-nses
+       (swap! *state merge))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
   (let [{:keys [watcher]} @*state]

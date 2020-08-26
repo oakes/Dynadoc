@@ -161,7 +161,7 @@
     []
   (group-by :sym nses)))
 
-(defn page-state [uri {:keys [type ns-sym var-sym static? nses cljs-nses-and-vars] :as opts}]
+(defn page-state [uri {:keys [::common/type ::common/ns-sym ::common/var-sym ::common/static? ::common/nses ::common/cljs-nses-and-vars] :as opts}]
   (let [cljs-nses-and-vars (or cljs-nses-and-vars (get-cljs-nses-and-vars))
         dedupe-pref (:dedupe-pref @*options)
         dedupe-fn (if dedupe-pref
@@ -189,18 +189,18 @@
                      (repeat "../")
                      str/join)]
       (merge opts
-        {:static? static?
-         :nses nses
-         :ns-meta (when (= type :clj)
-                    (some-> ns-sym the-ns meta))
-         :vars vars
-         :rel-path rel-path
-         :hide-badge? (some? dedupe-pref)})))
+        {::common/static? static?
+         ::common/nses nses
+         ::common/ns-meta (when (= type :clj)
+                     (some-> ns-sym the-ns meta))
+         ::common/vars vars
+         ::common/rel-path rel-path
+         ::common/hide-badge? (some? dedupe-pref)})))
 
 (defn page [uri opts]
   (let [state (page-state uri opts)]
     (-> "template.html" io/resource slurp
-        (str/replace "{{rel-path}}" (:rel-path state))
+        (str/replace "{{rel-path}}" (::common/rel-path state))
         (str/replace "{{content}}" (rum/render-html (common/app (atom state))))
         (str/replace "{{initial-state}}" (-> (pr-str state)
                                              (.getBytes "UTF-8")
@@ -238,11 +238,11 @@
             (.putNextEntry zip (ZipEntry. "index.html"))
             (io/copy (page
                        "/index.html"
-                       {:type type
-                        :ns-sym ns-sym
-                        :var-sym var-sym
-                        :static? true
-                        :hide-sidebar? true})
+                       {::common/type type
+                        ::common/ns-sym ns-sym
+                        ::common/var-sym var-sym
+                        ::common/static? true
+                        ::common/hide-sidebar? true})
               zip)
             (.closeEntry zip))
           (some? ns-sym)
@@ -254,23 +254,23 @@
             (.putNextEntry zip (ZipEntry. "index.html"))
             (io/copy (page
                        "/index.html"
-                       {:type type
-                        :ns-sym ns-sym
-                        :static? true
-                        :hide-sidebar? true
-                        :cljs-nses-and-vars cljs-nses-and-vars})
+                       {::common/type type
+                        ::common/ns-sym ns-sym
+                        ::common/static? true
+                        ::common/hide-sidebar? true
+                        ::common/cljs-nses-and-vars cljs-nses-and-vars})
               zip)
             (.closeEntry zip)
             (doseq [var-sym var-syms
                     :let [path (common/var-sym->url "" true type ns-sym var-sym)]]
               (.putNextEntry zip (ZipEntry. path))
               (io/copy (page path
-                         {:type type
-                          :ns-sym ns-sym
-                          :var-sym var-sym
-                          :static? true
-                          :hide-sidebar? true
-                          :cljs-nses-and-vars cljs-nses-and-vars})
+                         {::common/type type
+                          ::common/ns-sym ns-sym
+                          ::common/var-sym var-sym
+                          ::common/static? true
+                          ::common/hide-sidebar? true
+                          ::common/cljs-nses-and-vars cljs-nses-and-vars})
                 zip)
               (.closeEntry zip))))
         "multiple"
@@ -286,32 +286,32 @@
               nses (sort-by :sym nses)]
           (.putNextEntry zip (ZipEntry. "index.html"))
           (io/copy (page "/index.html"
-                     {:static? true
-                      :cljs-nses-and-vars cljs-nses-and-vars
-                      :nses nses})
+                     {::common/static? true
+                      ::common/cljs-nses-and-vars cljs-nses-and-vars
+                      ::common/nses nses})
             zip)
           (.closeEntry zip)
           (doseq [{:keys [sym type var-syms]} nses
                   :let [path (str (name type) "/" sym ".html")]]
             (.putNextEntry zip (ZipEntry. path))
             (io/copy (page path
-                       {:type type
-                        :ns-sym sym
-                        :static? true
-                        :cljs-nses-and-vars cljs-nses-and-vars
-                        :nses nses})
+                       {::common/type type
+                        ::common/ns-sym sym
+                        ::common/static? true
+                        ::common/cljs-nses-and-vars cljs-nses-and-vars
+                        ::common/nses nses})
               zip)
             (.closeEntry zip)
             (doseq [var-sym var-syms
                     :let [path (common/var-sym->url "" true type sym var-sym)]]
               (.putNextEntry zip (ZipEntry. path))
               (io/copy (page path
-                         {:type type
-                          :ns-sym sym
-                          :var-sym var-sym
-                          :static? true
-                          :cljs-nses-and-vars cljs-nses-and-vars
-                          :nses nses})
+                         {::common/type type
+                          ::common/ns-sym sym
+                          ::common/var-sym var-sym
+                          ::common/static? true
+                          ::common/cljs-nses-and-vars cljs-nses-and-vars
+                          ::common/nses nses})
                 zip)
               (.closeEntry zip)))))
       (doseq [path public-files]
@@ -329,7 +329,7 @@
         "/"
         {:status 200
          :headers {"Content-Type" "text/html"}
-         :body (page uri {:static? false})}
+         :body (page uri {::common/static? false})}
         "/eval"
         {:status 200
          :headers {"Content-Type" "text/plain"}
@@ -352,7 +352,10 @@
         (when (contains? #{:clj :cljs} type)
           {:status 200
            :headers {"Content-Type" "text/html"}
-           :body (page uri {:static? false :type type :ns-sym ns-sym :var-sym var-sym})}))
+           :body (page uri {::common/static? false
+                            ::common/type type
+                            ::common/ns-sym ns-sym
+                            ::common/var-sym var-sym})}))
       (not-found "Page not found")))
 
 (defn print-server [server]
@@ -375,8 +378,11 @@
          (fn [_ _ _ cljs-info]
            (doseq [[channel uri] @watch/*channel->uri]
              (let [[type ns-sym var-sym] (u/parse-uri uri)]
-               (->> {:static? false :cljs-nses-and-vars (u/flatten-vals cljs-info)
-                     :type type :ns-sym ns-sym :var-sym var-sym}
+               (->> {::common/static? false
+                     ::common/cljs-nses-and-vars (u/flatten-vals cljs-info)
+                     ::common/type type
+                     ::common/ns-sym ns-sym
+                     ::common/var-sym var-sym}
                     (page-state uri)
                     pr-str
                     (send! channel))))))

@@ -275,27 +275,29 @@
 
 (def rules
   (o/ruleset
-    {::get-constants
+    {::get-server-state
      [:what
-      [::constant ::ns-sym ns-sym]
-      [::constant ::var-sym var-sym]
-      [::constant ::type type]]}))
+      [::server ::ns-sym ns-sym]
+      [::server ::var-sym var-sym]
+      [::server ::type type]]}))
 
 (def *session
   (-> (reduce o/add-rule (o/->session) rules)
       atom))
 
-(defn init-session [state]
+(defn update-session [state]
   (swap! *session
          (fn [session]
-           (-> session
-               (o/insert ::constant ::ns-sym (:ns-sym state))
-               (o/insert ::constant ::var-sym (:var-sym state))
-               (o/insert ::constant ::type (:type state))))))
+           (reduce-kv
+             (fn [session k v]
+               (o/insert session ::server k v))
+             session
+             state)))
+  state)
 
-(defn get-constants []
+(defn get-server-state []
   (-> @*session
-       (o/query-all ::get-constants)
+       (o/query-all ::get-server-state)
        first
-       (or (throw (ex-info "Constants not found" {})))))
+       (or (throw (ex-info "Server state not found" {})))))
 
