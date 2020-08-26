@@ -176,59 +176,6 @@
                       (into [:div] vars))])))
          nses))]))
 
-(rum/defcs export-form < (rum/local {} ::*options)
-  [{:keys [::*options] :as rum-state} {:keys [type ns-sym var-sym export-filter exportable?]} *state]
-  (let [{:keys [pages]
-         :or {pages (if ns-sym :single :multiple)}} @*options]
-    [:form {:action "/dynadoc-export.zip"
-            :method :get
-            :style {:text-align "left"}}
-     [:div
-      [:label
-       [:input {:type "radio" :name "pages" :value "single" :checked (= pages :single)
-                :on-click #(swap! *options assoc :pages :single)
-                :disabled (nil? ns-sym)}]
-       "Only this page"]]
-     [:div
-      [:label
-       [:input {:type "radio" :name "pages" :value "multiple" :checked (= pages :multiple)
-                :on-click #(swap! *options assoc :pages :multiple)}]
-       "Multiple pages"]]
-     [:div {:style {:margin 10 :font-size 14}}
-      (case pages
-        :single [:i
-                 "Only the current page will be exported"
-                 [:br]
-                 "and the sidebar will be hidden."]
-        :multiple [:i
-                   "All the namespaces in the sidebar"
-                   [:br]
-                   "will be exported. You can narrow them"
-                   [:br]
-                   "down with the following regex:"
-                   [:div
-                    [:input {:type "text"
-                             :value ""
-                             :placeholder "Export filter"
-                             :style {:margin 5 :font-size 14}
-                             :on-change #(->> % .-target .-value
-                                              (swap! *state assoc :export-filter))}]]])]
-     [:input {:type "hidden" :name "export-filter" :value (or export-filter "")}]
-     (when type
-       [:input {:type "hidden" :name "type" :value (name type)}])
-     (when ns-sym
-       [:input {:type "hidden" :name "ns-sym" :value (str ns-sym)}])
-     (when var-sym
-       [:input {:type "hidden" :name "var-sym" :value (str var-sym)}])
-     [:div {:style {:text-align "center"}}
-      [:button {:type "submit"
-                :disabled (not exportable?)}
-       "Download zip file"]]
-     (when-not exportable?
-       [:div {:style {:margin 10 :font-size 14}}
-        [:div [:b "You built Dynadoc with :optimizations set to :none"]]
-        [:div [:b "You must set it to :simple in order to export"]]])]))
-
 (def rules
   (o/ruleset
     {::get-server-state
@@ -287,8 +234,7 @@
       [::client ::cljs-started? cljs-started?]
       [::server ::static? static?]
       :then
-      (let [*state (orum/prop)
-            state @*state]
+      (let [*state (orum/prop)]
         (when-not static?
           [:div {:style {:min-height 75}}
            (when cljs-started?
@@ -296,9 +242,70 @@
               (expandable-section
                 {:label "Export"
                  :url ""
-                 :*content (delay (export-form state *state))
+                 :*content (delay (export-form *state))
                  :on-close #(swap! *state dissoc :export-filter)})])
-           [:div {:style {:clear "right"}}]]))]}))
+           [:div {:style {:clear "right"}}]]))]
+     
+     ::export-form
+     [:what
+      [::server ::ns-sym ns-sym]
+      [::server ::ns-meta ns-meta]
+      [::server ::var-sym var-sym]
+      [::server ::type type]
+      [::client ::exportable? exportable?]
+      :then
+      (let [*state (orum/prop)
+            export-filter (:export-filter @*state)
+            *options (orum/atom {:pages (if ns-sym :single :multiple)})
+            {:keys [pages]} @*options]
+        [:form {:action "/dynadoc-export.zip"
+                :method :get
+                :style {:text-align "left"}}
+         [:div
+          [:label
+           [:input {:type "radio" :name "pages" :value "single" :checked (= pages :single)
+                    :on-click #(swap! *options assoc :pages :single)
+                    :disabled (nil? ns-sym)}]
+           "Only this page"]]
+         [:div
+          [:label
+           [:input {:type "radio" :name "pages" :value "multiple" :checked (= pages :multiple)
+                    :on-click #(swap! *options assoc :pages :multiple)}]
+           "Multiple pages"]]
+         [:div {:style {:margin 10 :font-size 14}}
+          (case pages
+            :single [:i
+                     "Only the current page will be exported"
+                     [:br]
+                     "and the sidebar will be hidden."]
+            :multiple [:i
+                       "All the namespaces in the sidebar"
+                       [:br]
+                       "will be exported. You can narrow them"
+                       [:br]
+                       "down with the following regex:"
+                       [:div
+                        [:input {:type "text"
+                                 :value ""
+                                 :placeholder "Export filter"
+                                 :style {:margin 5 :font-size 14}
+                                 :on-change #(->> % .-target .-value
+                                                  (swap! *state assoc :export-filter))}]]])]
+         [:input {:type "hidden" :name "export-filter" :value (or export-filter "")}]
+         (when type
+           [:input {:type "hidden" :name "type" :value (name type)}])
+         (when ns-sym
+           [:input {:type "hidden" :name "ns-sym" :value (str ns-sym)}])
+         (when var-sym
+           [:input {:type "hidden" :name "var-sym" :value (str var-sym)}])
+         [:div {:style {:text-align "center"}}
+          [:button {:type "submit"
+                    :disabled (not exportable?)}
+           "Download zip file"]]
+         (when-not exportable?
+           [:div {:style {:margin 10 :font-size 14}}
+            [:div [:b "You built Dynadoc with :optimizations set to :none"]]
+            [:div [:b "You must set it to :simple in order to export"]]])])]}))
 
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
