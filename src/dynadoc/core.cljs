@@ -105,7 +105,7 @@
        (common/update-session ::common/server)
        strip-nses
        (swap! *state merge))
-  (rum/mount (common/app *state)
+  (rum/mount (common/app)
     (.querySelector js/document "#app"))
   (let [{:keys [watcher]} @*state]
     (->> {::common/cljs-started? true

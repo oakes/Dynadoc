@@ -202,7 +202,7 @@
   (let [state (page-state uri opts)]
     (-> "template.html" io/resource slurp
         (str/replace "{{rel-path}}" (::common/rel-path state))
-        (str/replace "{{content}}" (rum/render-html (common/app (atom state))))
+        (str/replace "{{content}}" (rum/render-html (common/app)))
         (str/replace "{{initial-state}}" (-> (pr-str state)
                                              (.getBytes "UTF-8")
                                              base64/encode
