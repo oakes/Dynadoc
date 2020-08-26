@@ -150,7 +150,8 @@
                      (println e))))]
     [:div
      (when cljs-started?
-       [:input {:class "search"
+       [:input {:value ""
+                :class "search"
                 :on-change #(->> % .-target .-value (reset! *search))
                 :placeholder "Search"}])
      (into [:div {:class "nses"}
@@ -228,18 +229,6 @@
         [:div [:b "You built Dynadoc with :optimizations set to :none"]]
         [:div [:b "You must set it to :simple in order to export"]]])]))
 
-(rum/defc export [{:keys [cljs-started? static?] :as state} *state]
-  (when-not static?
-    [:div {:style {:min-height 75}}
-     (when cljs-started?
-       [:div {:class "export"}
-        (expandable-section
-          {:label "Export"
-           :url ""
-           :*content (delay (export-form state *state))
-           :on-close #(swap! *state dissoc :export-filter)})])
-     [:div {:style {:clear "right"}}]]))
-
 (def rules
   (o/ruleset
     {::get-server-state
@@ -270,7 +259,7 @@
            (if ns-sym
              (into [:div {:class "vars"
                           :style {:left (if hide-sidebar? 0 300)}}
-                    (export state *state)
+                    (export *state)
                     (when-not var-sym
                       [:div
                        [:center [:h1 (str ns-sym)]]
@@ -278,7 +267,7 @@
                          [:div {:class "section doc"} doc])])]
                (mapv (partial var->html state) vars))
              [:div {:class "vars"}
-              (export state *state)])
+              (export *state)])
            (cond
              static?
              [:div {:class "footer"}
@@ -291,7 +280,25 @@
               "This is a custom build of "
               [:a {:href "https://github.com/oakes/Dynadoc"
                    :target "_blank"}
-               "Dynadoc"]]))])]}))
+               "Dynadoc"]]))])]
+     
+     ::export
+     [:what
+      [::client ::cljs-started? cljs-started?]
+      [::server ::static? static?]
+      :then
+      (let [*state (orum/props)
+            state @*state]
+        (when-not static?
+          [:div {:style {:min-height 75}}
+           (when cljs-started?
+             [:div {:class "export"}
+              (expandable-section
+                {:label "Export"
+                 :url ""
+                 :*content (delay (export-form state *state))
+                 :on-close #(swap! *state dissoc :export-filter)})])
+           [:div {:style {:clear "right"}}]]))]}))
 
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
