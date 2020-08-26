@@ -3,6 +3,4 @@
             [dynadoc.common :as common]))
 
 (->> {::common/prod? true}
-     (common/update-session ::common/client)
-     c/strip-nses
-     (swap! c/*state merge))
+     (common/update-session! ::common/client))

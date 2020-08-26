@@ -12,15 +12,13 @@
   (binding [r/*suppress-read* true]
     (r/read-string {:read-cond :preserve :eof nil} s)))
 
-(defonce *state (atom {}))
-
 (defn transform [{:keys [with-focus with-card with-callback] :as ex} form-str]
   (if (or with-focus with-card with-callback)
     (transform/transform ex (read-string form-str))
     form-str))
 
 (defn clj-compiler-fn [example forms cb]
-  (let [ns-sym (:ns-sym (common/get-server-state))]
+  (let [ns-sym (:ns-sym (common/get-state))]
     (try
       (.send XhrIo
         "/eval"
@@ -46,7 +44,7 @@
     (pr-str form)))
 
 (defn cljs-compiler-fn [example forms cb]
-  (let [ns-sym (:ns-sym (common/get-server-state))]
+  (let [ns-sym (:ns-sym (common/get-state))]
     (es/code->results
       (into [(list 'ns ns-sym)]
         (mapv (partial transform example) forms))
@@ -68,18 +66,11 @@
   (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
     (when-let [content (.querySelector paren-soup ".content")]
       (set! (.-contentEditable content) true))
-    (let [type (:type (common/get-server-state))]
+    (let [type (:type (common/get-state))]
       (ps/init paren-soup
         (js->clj {:compiler-fn (if (= :clj type)
                                  (partial clj-compiler-fn example)
                                  (partial cljs-compiler-fn example))})))))
-
-(defn strip-nses [state]
-  (reduce-kv
-    (fn [m k v]
-      (assoc m (keyword (name k)) v))
-    {}
-    state))
 
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
@@ -92,9 +83,7 @@
       (fn [event]
         (->> (.-data event)
              read-string
-             (common/update-session ::common/server)
-             strip-nses
-             (swap! *state merge))))
+             (common/update-session! ::common/server))))
     sock))
 
 (defn init []
@@ -102,24 +91,20 @@
        .-textContent
        js/atob
        read-string
-       (common/update-session ::common/server)
-       strip-nses
-       (swap! *state merge))
+       (common/update-session! ::common/server))
   (rum/mount (common/app)
     (.querySelector js/document "#app"))
-  (let [{:keys [watcher]} @*state]
+  (let [{:keys [var-sym watcher]} (common/get-state)]
     (->> {::common/cljs-started? true
           ::common/exportable? js/COMPILED
           ::common/init-editor (memoize init-editor)
           ::common/init-example-editor (memoize init-example-editor)
           ::common/watcher (when-not js/COMPILED
                              (or watcher (init-watcher!)))}
-         (common/update-session ::common/client)
-         strip-nses
-         (swap! *state merge)))
-  (when (:var-sym @*state)
-    (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
-      (set! (.-display (.-style button)) "inline-block"))))
+         (common/update-session! ::common/client))
+    (when var-sym
+      (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
+        (set! (.-display (.-style button)) "inline-block")))))
 
 (init)
 

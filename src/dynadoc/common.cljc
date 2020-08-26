@@ -89,11 +89,12 @@
 
 (def rules
   (o/ruleset
-    {::get-server-state
+    {::get-state
      [:what
       [::server ::ns-sym ns-sym]
       [::server ::var-sym var-sym]
-      [::server ::type type]]}))
+      [::server ::type type]
+      [::client ::watcher watcher]]}))
 
 (declare *session)
 
@@ -348,16 +349,17 @@
                           (into [:div] vars))])))
              nses))])]}))
 
-(def *session
+(defonce *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
       (o/insert ::client ::prod? false)
       (o/insert ::client ::cljs-started? false)
       (o/insert ::client ::exportable? false)
       (o/insert ::server ::hide-sidebar? false)
       (o/insert ::client ::export-filter "")
+      (o/insert ::client ::watcher nil)
       atom))
 
-(defn update-session [id state]
+(defn update-session! [id state]
   (swap! *session
          (fn [session]
            (o/fire-rules
@@ -368,11 +370,11 @@
                state))))
   state)
 
-(defn get-server-state []
+(defn get-state []
   (-> @*session
-       (o/query-all ::get-server-state)
+       (o/query-all ::get-state)
        first
-       (or (throw (ex-info "Server state not found" {})))))
+       (or (throw (ex-info "State not found" {})))))
 
 (rum/defc app []
   (app-root {}))
