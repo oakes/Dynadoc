@@ -318,6 +318,10 @@
 
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
+      (o/insert ::client ::prod? false)
+      (o/insert ::client ::cljs-started? false)
+      (o/insert ::client ::exportable? false)
+      (o/insert ::server ::hide-sidebar? false)
       atom))
 
 (defn update-session [id state]

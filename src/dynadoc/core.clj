@@ -189,7 +189,6 @@
                      (repeat "../")
                      str/join)]
       (merge
-        {::common/hide-sidebar? false}
         opts
         {::common/static? static?
          ::common/nses nses
