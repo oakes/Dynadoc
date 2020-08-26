@@ -5,8 +5,7 @@
             [dynadoc.transform :as transform]
             [paren-soup.core :as ps]
             [eval-soup.core :as es]
-            [goog.object :as gobj]
-            [odoyle.rules :as o])
+            [goog.object :as gobj])
   (:import goog.net.XhrIo))
 
 (defn read-string [s]
@@ -21,21 +20,22 @@
     form-str))
 
 (defn clj-compiler-fn [example forms cb]
-  (try
-    (.send XhrIo
-      "/eval"
-      (fn [e]
-        (if (.isSuccess (.-target e))
-          (->> (.. e -target getResponseText)
-               read-string
-               rest ; ignore the result of in-ns
-               (mapv #(if (vector? %) (into-array %) %))
-               cb)
-          (cb [])))
-      "POST"
-      (pr-str (into [(list 'in-ns (list 'quote (:ns-sym @*state)))]
-                (mapv (partial transform (dissoc example :with-card)) forms))))
-    (catch js/Error _ (cb []))))
+  (let [ns-sym (:ns-sym (common/get-constants))]
+    (try
+      (.send XhrIo
+        "/eval"
+        (fn [e]
+          (if (.isSuccess (.-target e))
+            (->> (.. e -target getResponseText)
+                 read-string
+                 rest ; ignore the result of in-ns
+                 (mapv #(if (vector? %) (into-array %) %))
+                 cb)
+            (cb [])))
+        "POST"
+        (pr-str (into [(list 'in-ns (list 'quote ns-sym))]
+                  (mapv (partial transform (dissoc example :with-card)) forms))))
+      (catch js/Error _ (cb [])))))
 
 (defn form->serializable
   "Converts the input to either a string or (if an error object) an array of data"
@@ -46,17 +46,18 @@
     (pr-str form)))
 
 (defn cljs-compiler-fn [example forms cb]
-  (es/code->results
-    (into [(list 'ns (:ns-sym @*state))]
-      (mapv (partial transform example) forms))
-    (fn [results]
-      (->> results
-           rest ; ignore the result of ns
-           (mapv form->serializable)
-           cb))
-    {:custom-load (fn [opts cb]
-                    (cb {:lang :clj :source ""}))
-     :disable-timeout? true}))
+  (let [ns-sym (:ns-sym (common/get-constants))]
+    (es/code->results
+      (into [(list 'ns ns-sym)]
+        (mapv (partial transform example) forms))
+      (fn [results]
+        (->> results
+             rest ; ignore the result of ns
+             (mapv form->serializable)
+             cb))
+      {:custom-load (fn [opts cb]
+                      (cb {:lang :clj :source ""}))
+       :disable-timeout? true})))
 
 (defn init-editor [elem]
   (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
@@ -67,10 +68,11 @@
   (when-let [paren-soup (or (.querySelector elem ".paren-soup") elem)]
     (when-let [content (.querySelector paren-soup ".content")]
       (set! (.-contentEditable content) true))
-    (ps/init paren-soup
-      (js->clj {:compiler-fn (if (= :clj (:type @*state))
-                               (partial clj-compiler-fn example)
-                               (partial cljs-compiler-fn example))}))))
+    (let [type (:type (common/get-constants))]
+      (ps/init paren-soup
+        (js->clj {:compiler-fn (if (= :clj type)
+                                 (partial clj-compiler-fn example)
+                                 (partial cljs-compiler-fn example))})))))
 
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
@@ -93,7 +95,6 @@
        read-string
        (swap! *state merge)
        common/init-session)
-  (println "constants:" (o/query-all @common/*session ::common/get-constants))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
   (let [{:keys [watcher]} @*state]

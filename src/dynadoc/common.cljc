@@ -278,7 +278,8 @@
     {::get-constants
      [:what
       [::constant ::ns-sym ns-sym]
-      [::constant ::var-sym var-sym]]}))
+      [::constant ::var-sym var-sym]
+      [::constant ::type type]]}))
 
 (def *session
   (-> (reduce o/add-rule (o/->session) rules)
@@ -289,5 +290,12 @@
          (fn [session]
            (-> session
                (o/insert ::constant ::ns-sym (:ns-sym state))
-               (o/insert ::constant ::var-sym (:var-sym state))))))
+               (o/insert ::constant ::var-sym (:var-sym state))
+               (o/insert ::constant ::type (:type state))))))
+
+(defn get-constants []
+  (-> @*session
+       (o/query-all ::get-constants)
+       first
+       (or (throw (ex-info "Constants not found" {})))))
 
