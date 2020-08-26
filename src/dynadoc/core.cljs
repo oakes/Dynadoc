@@ -90,10 +90,9 @@
         (.send sock js/window.location.pathname)))
     (set! (.-onmessage sock)
       (fn [event]
-        (println "hey")
         (->> (.-data event)
              read-string
-             common/update-session
+             (common/update-session ::common/server)
              strip-nses
              (swap! *state merge))))
     sock))
@@ -103,19 +102,21 @@
        .-textContent
        js/atob
        read-string
-       common/update-session
+       (common/update-session ::common/server)
        strip-nses
        (swap! *state merge))
   (rum/mount (common/app *state)
     (.querySelector js/document "#app"))
   (let [{:keys [watcher]} @*state]
-    (swap! *state assoc
-      :cljs-started? true
-      :exportable? js/COMPILED
-      :init-editor (memoize init-editor)
-      :init-example-editor (memoize init-example-editor)
-      :watcher (when-not js/COMPILED
-                 (or watcher (init-watcher!)))))
+    (->> {::common/cljs-started? true
+          ::common/exportable? js/COMPILED
+          ::common/init-editor (memoize init-editor)
+          ::common/init-example-editor (memoize init-example-editor)
+          ::common/watcher (when-not js/COMPILED
+                             (or watcher (init-watcher!)))}
+         (common/update-session ::common/client)
+         strip-nses
+         (swap! *state merge)))
   (when (:var-sym @*state)
     (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
       (set! (.-display (.-style button)) "inline-block"))))

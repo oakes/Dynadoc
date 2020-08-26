@@ -188,7 +188,9 @@
                      (- 1)
                      (repeat "../")
                      str/join)]
-      (merge opts
+      (merge
+        {::common/hide-sidebar? false}
+        opts
         {::common/static? static?
          ::common/nses nses
          ::common/ns-meta (when (= type :clj)

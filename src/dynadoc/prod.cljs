@@ -1,4 +1,8 @@
 (ns dynadoc.prod
-  (:require [dynadoc.core :as c]))
+  (:require [dynadoc.core :as c]
+            [dynadoc.common :as common]))
 
-(swap! c/*state assoc :prod? true)
+(->> {::common/prod? true}
+     (common/update-session ::common/client)
+     c/strip-nses
+     (swap! c/*state merge))
