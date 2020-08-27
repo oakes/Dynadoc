@@ -83,7 +83,7 @@
       (fn [event]
         (->> (.-data event)
              read-string
-             (common/update-session! ::common/server))))
+             (swap! common/*session common/update-session ::common/server))))
     sock))
 
 (defn init []
@@ -91,7 +91,7 @@
        .-textContent
        js/atob
        read-string
-       (common/update-session! ::common/server))
+       (swap! common/*session common/update-session ::common/server))
   (rum/mount (common/app-root common/*session)
     (.querySelector js/document "#app"))
   (let [{:keys [var-sym watcher]} (common/get-state)]
@@ -101,7 +101,7 @@
           ::common/init-example-editor (memoize init-example-editor)
           ::common/watcher (when-not js/COMPILED
                              (or watcher (init-watcher!)))}
-         (common/update-session! ::common/client))
+         (swap! common/*session common/update-session ::common/client))
     (when var-sym
       (doseq [button (-> js/document (.querySelectorAll ".button") array-seq)]
         (set! (.-display (.-style button)) "inline-block")))))

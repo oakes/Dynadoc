@@ -2,5 +2,4 @@
   (:require [dynadoc.core :as c]
             [dynadoc.common :as common]))
 
-(->> {::common/prod? true}
-     (common/update-session! ::common/client))
+(swap! common/*session common/update-session ::common/client {::common/prod? true})

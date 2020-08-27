@@ -199,11 +199,11 @@
          ::common/hide-badge? (some? dedupe-pref)})))
 
 (defn page [uri opts]
-  (let [state (page-state uri opts)]
-    (common/update-session! ::common/server state)
+  (let [state (page-state uri opts)
+        session (common/update-session @common/*session ::common/server state)]
     (-> "template.html" io/resource slurp
         (str/replace "{{rel-path}}" (::common/rel-path state))
-        (str/replace "{{content}}" (rum/render-html (common/app-root common/*session)))
+        (str/replace "{{content}}" (rum/render-html (common/app-root (atom session))))
         (str/replace "{{initial-state}}" (-> (pr-str state)
                                              (.getBytes "UTF-8")
                                              base64/encode

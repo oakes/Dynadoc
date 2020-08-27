@@ -360,15 +360,13 @@
       (o/insert ::client ::watcher nil)
       atom))
 
-(defn update-session! [id state]
-  (swap! *session
-         (fn [session]
-           (o/fire-rules
-             (reduce-kv
-               (fn [session k v]
-                 (o/insert session id k v))
-               session
-               state)))))
+(defn update-session [session id state]
+  (o/fire-rules
+    (reduce-kv
+      (fn [session k v]
+        (o/insert session id k v))
+      session
+      state)))
 
 (defn get-state []
   (-> @*session
