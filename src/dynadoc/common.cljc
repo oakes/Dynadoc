@@ -24,7 +24,7 @@
     (when static? ".html")))
 
 (rum/defcs expandable-section < (rum/local false ::*expanded?)
-  [{:keys [::*expanded?] :as rum-state} {:keys [label url *content on-close]}]
+  [{:keys [::*expanded?] :as rum-state} {:keys [label url content on-close]}]
   [:div {:class "section"}
    [:a {:href url
         #?@(:cljs [:on-click (fn [e]
@@ -34,7 +34,7 @@
                                    (on-close))))])}
     [:h3 (str (if @*expanded? "- " "+ ") label)]]
    (when @*expanded?
-     @*content)])
+     content)])
 
 (defn init-editor [rum-state]
   (let [[state] (:rum/args rum-state)]
@@ -180,7 +180,7 @@
              (expandable-section
                {:label "Spec"
                 :url url
-                :*content (delay (spec->html spec))})))
+                :content (spec->html spec)})))
          (when source
            (if var-sym
              [:div {:class "section"}
@@ -189,7 +189,7 @@
              (expandable-section
                {:label "Source"
                 :url url
-                :*content (delay (source->html source))})))])]
+                :content (source->html source)})))])]
 
      example->html
      [:what
@@ -224,7 +224,7 @@
             (expandable-section
               {:label "Export"
                :url ""
-               :*content (delay (export-form {}))
+               :content (export-form {})
                :on-close #(swap! *session
                                  (fn [session]
                                    (-> session
