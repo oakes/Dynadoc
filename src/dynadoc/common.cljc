@@ -368,12 +368,7 @@
       atom))
 
 (defn update-session [session id state]
-  (o/fire-rules
-    (reduce-kv
-      (fn [session k v]
-        (o/insert session id k v))
-      session
-      state)))
+  (o/fire-rules (o/insert session id state)))
 
 (defn get-state []
   (-> @*session
