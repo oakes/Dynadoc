@@ -372,7 +372,7 @@
 
 (defn get-state []
   (-> @*session
-       (o/query-all ::get-state)
-       first
-       (or (throw (ex-info "State not found" {})))))
+      (o/query-all ::get-state)
+      first
+      (or (throw (ex-info "State not found" {})))))
 

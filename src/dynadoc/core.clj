@@ -193,7 +193,7 @@
         {::common/static? static?
          ::common/nses nses
          ::common/ns-meta (when (= type :clj)
-                     (some-> ns-sym the-ns meta))
+                            (some-> ns-sym the-ns meta))
          ::common/vars vars
          ::common/rel-path rel-path
          ::common/hide-badge? (some? dedupe-pref)})))
