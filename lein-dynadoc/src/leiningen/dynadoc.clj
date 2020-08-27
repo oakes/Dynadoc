@@ -12,7 +12,7 @@
   (eval/eval-in-project
     (deps/add-if-missing
       project
-      '[dynadoc/lein-dynadoc "1.6.5"])
+      '[dynadoc/lein-dynadoc "1.7.0"])
     `(do
        (dynadoc.core/start ~options)
        (when '~main (require '~main)))
