@@ -3,7 +3,8 @@
   '[expound.alpha :as expound]
   '[clojure.spec.alpha :as s]
   '[figwheel.main :as figwheel]
-  '[dynadoc.core :as dynadoc])
+  '[dynadoc.core :as dynadoc]
+  '[dynadoc.examples])
 
 (st/instrument)
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
