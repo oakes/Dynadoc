@@ -355,9 +355,11 @@
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
       (o/insert ::client {::prod? false
+                          ::export-filter ""
                           ::cljs-started? false
                           ::exportable? false
-                          ::export-filter ""
+                          ::init-editor nil
+                          ::init-example-editor nil
                           ::watcher nil})
       (o/insert ::server {::ns-sym nil
                           ::var-sym nil
