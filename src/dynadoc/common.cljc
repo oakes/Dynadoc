@@ -354,12 +354,15 @@
 
 (def *session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
-      (o/insert ::client ::prod? false)
-      (o/insert ::client ::cljs-started? false)
-      (o/insert ::client ::exportable? false)
-      (o/insert ::server ::hide-sidebar? false)
-      (o/insert ::client ::export-filter "")
-      (o/insert ::client ::watcher nil)
+      (o/insert ::client {::prod? false
+                          ::cljs-started? false
+                          ::exportable? false
+                          ::export-filter ""
+                          ::watcher nil})
+      (o/insert ::server {::ns-sym nil
+                          ::var-sym nil
+                          ::type nil
+                          ::hide-sidebar? false})
       atom))
 
 (defn update-session [session id state]
