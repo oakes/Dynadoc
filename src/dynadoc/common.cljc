@@ -352,7 +352,7 @@
       [::server ::type type]
       [::client ::watcher watcher]]}))
 
-(def *session
+(def initial-session
   (-> (reduce o/add-rule (o/->session) (concat rules components))
       (o/insert ::client {::prod? false
                           ::export-filter ""
@@ -364,8 +364,9 @@
       (o/insert ::server {::ns-sym nil
                           ::var-sym nil
                           ::type nil
-                          ::hide-sidebar? false})
-      atom))
+                          ::hide-sidebar? false})))
+
+(def *session (atom initial-session))
 
 (defn update-session [session id state]
   (o/fire-rules (o/insert session id state)))

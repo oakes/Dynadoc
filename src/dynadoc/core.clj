@@ -202,7 +202,7 @@
 (defn page [uri opts]
   (binding [orum/*matches* (volatile! {})]
     (let [state (page-state uri opts)]
-      (common/update-session @common/*session ::common/server state)
+      (common/update-session common/initial-session ::common/server state)
       (-> "template.html" io/resource slurp
           (str/replace "{{rel-path}}" (::common/rel-path state))
           (str/replace "{{content}}" (rum/render-html (common/app-root nil)))
