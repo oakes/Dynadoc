@@ -1,4 +1,4 @@
-(defproject dynadoc "1.7.2"
+(defproject dynadoc "1.7.3-SNAPSHOT"
   :description "A dynamic documentation generator"
   :url "https://github.com/oakes/Dynadoc"
   :license {:name "Public Domain"
