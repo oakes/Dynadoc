@@ -1,5 +1,5 @@
 {:paths ["src" "resources"]
- :deps {paren-soup {:mvn/version "2.16.1"}
+ :deps {paren-soup {:mvn/version "2.16.2"}
         defexample {:mvn/version "1.7.0"}
         ring {:mvn/version "1.8.1"}
         http-kit {:mvn/version "2.4.0"}
