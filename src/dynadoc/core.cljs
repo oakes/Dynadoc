@@ -70,7 +70,8 @@
       (ps/init paren-soup
         (js->clj {:compiler-fn (if (= :clj type)
                                  (partial clj-compiler-fn example)
-                                 (partial cljs-compiler-fn example))})))))
+                                 (partial cljs-compiler-fn example))
+                  :fix-indent-on-init? true})))))
 
 (defn init-watcher! []
   (let [protocol (if (= (.-protocol js/location) "https:") "wss:" "ws:")
