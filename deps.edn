@@ -1,16 +1,16 @@
 {:paths ["src" "resources"]
- :deps {paren-soup {:mvn/version "2.16.2"}
-        defexample {:mvn/version "1.7.0"}
-        ring {:mvn/version "1.8.1"}
-        http-kit {:mvn/version "2.4.0"}
-        eval-soup {:mvn/version "1.5.0"}
-        html-soup {:mvn/version "1.6.1"}
+ :deps {paren-soup/paren-soup {:mvn/version "2.16.2"}
+        defexample/defexample {:mvn/version "1.7.0"}
+        ring/ring {:mvn/version "1.8.1"}
+        http-kit/http-kit {:mvn/version "2.4.0"}
+        eval-soup/eval-soup {:mvn/version "1.5.0"}
+        html-soup/html-soup {:mvn/version "1.6.1"}
         org.clojure/tools.cli {:mvn/version "0.3.5"}
-        hawk {:mvn/version "0.2.11"}
+        hawk/hawk {:mvn/version "0.2.11"}
         org.clojure/data.codec {:mvn/version "0.1.1"}
         net.sekao/odoyle-rum {:mvn/version "0.6.0"}}
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.764"}}}
            :dev {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}}
                  :main-opts ["dev.clj"]}
-           :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}
+           :prod {:extra-deps {leiningen/leiningen {:mvn/version "2.9.0"}}
                   :main-opts ["prod.clj"]}}}
