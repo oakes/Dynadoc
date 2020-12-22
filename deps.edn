@@ -10,9 +10,7 @@
         org.clojure/data.codec {:mvn/version "0.1.1"}
         net.sekao/odoyle-rum {:mvn/version "0.6.0"}}
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.764"}}}
-           :dev {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}
-                              orchestra {:mvn/version "2018.12.06-2"}
-                              expound {:mvn/version "0.7.2"}}
+           :dev {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}}
                  :main-opts ["dev.clj"]}
            :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}
                   :main-opts ["prod.clj"]}}}
