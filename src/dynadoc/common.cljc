@@ -3,9 +3,7 @@
             [html-soup.core :as hs]
             [clojure.string :as str]
             [odoyle.rules :as o]
-            [odoyle.rum :as orum])
-  #?(:cljs (:require-macros [odoyle.rules]
-                            [odoyle.rum])))
+            [odoyle.rum :as orum]))
 
 (defn ns-sym->url [rel-path static? type ns-sym]
   (str rel-path (name type) "/" ns-sym (when static? ".html")))
