@@ -8,7 +8,7 @@
         org.clojure/tools.cli {:mvn/version "0.3.5"}
         hawk/hawk {:mvn/version "0.2.11"}
         org.clojure/data.codec {:mvn/version "0.1.1"}
-        net.sekao/odoyle-rum {:mvn/version "0.8.0"}}
+        net.sekao/odoyle-rum {:mvn/version "0.9.0"}}
  :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.764"}}}
            :dev {:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}}
                  :main-opts ["dev.clj"]}

@@ -6,5 +6,6 @@
   '[dynadoc.examples])
 
 (st/instrument)
+(st/unstrument 'odoyle.rules/insert) ;; don't require specs for attributes
 (dynadoc/dev-start {:port 5000 :dev? true})
 (figwheel/-main "--build" "dev")

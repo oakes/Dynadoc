@@ -5,3 +5,4 @@
             [clojure.spec.alpha :as s]))
 
 (st/instrument)
+(st/unstrument 'odoyle.rules/insert) ;; don't require specs for attributes
